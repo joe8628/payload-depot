@@ -1,3 +1,85 @@
 #!/usr/bin/env bash
-# Rig pre-commit hook — stub (full implementation coming in Phase 3)
+# Rig pre-commit hook
+# Detects project language and runs linting + type-checking.
+# Blocks commit on check failure. Skips gracefully if tools are missing.
+
+set -uo pipefail
+
+PREFIX="[rig:pre-commit]"
+
+log()  { echo "$PREFIX $*"; }
+warn() { echo "$PREFIX WARNING: $*" >&2; }
+
+run_check() {
+  local label="$1" cmd="$2"
+  shift 2
+
+  if ! command -v "$cmd" &>/dev/null; then
+    warn "$cmd not found — skipping $label"
+    return 0
+  fi
+
+  log "Running $label..."
+  local output exit_code=0
+  output=$("$cmd" "$@" 2>&1) || exit_code=$?
+
+  if [[ $exit_code -ne 0 ]]; then
+    log "✗ $label: checks failed"
+    echo ""
+    echo "$output"
+    echo ""
+    return 1
+  fi
+
+  log "✓ $label: ok"
+  return 0
+}
+
+# Language detection
+if [[ -f "package.json" ]]; then
+  LANG="typescript"
+elif [[ -f "pyproject.toml" ]] || [[ -f "setup.py" ]]; then
+  LANG="python"
+elif [[ -f "CMakeLists.txt" ]] || [[ -f "Makefile" ]]; then
+  LANG="cpp"
+else
+  warn "No recognised language marker found — skipping checks"
+  exit 0
+fi
+
+log "Running $LANG checks..."
+
+FAILED=false
+
+case "$LANG" in
+  python)
+    run_check "ruff (lint)"   ruff check . || FAILED=true
+    run_check "mypy (types)"  mypy .       || FAILED=true
+    ;;
+  typescript)
+    run_check "eslint (lint)" eslint .    || FAILED=true
+    run_check "tsc (types)"   tsc --noEmit || FAILED=true
+    ;;
+  cpp)
+    if command -v clang-tidy &>/dev/null; then
+      run_check "clang-tidy (lint)" clang-tidy --quiet . || FAILED=true
+    else
+      warn "clang-tidy not found — skipping lint"
+    fi
+    if command -v make &>/dev/null; then
+      run_check "make (build check)" make --dry-run || FAILED=true
+    elif command -v cmake &>/dev/null; then
+      run_check "cmake (build check)" cmake --build . --target all -- -n || FAILED=true
+    else
+      warn "Neither make nor cmake found — skipping build check"
+    fi
+    ;;
+esac
+
+if $FAILED; then
+  echo "$PREFIX Commit blocked. Fix errors and try again." >&2
+  echo "$PREFIX To skip checks: git commit --no-verify" >&2
+  exit 1
+fi
+
 exit 0
