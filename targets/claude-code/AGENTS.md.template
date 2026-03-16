@@ -72,3 +72,23 @@
 **Input:** Error output, stack trace, relevant source files, `git log`.
 **Output:** Root cause analysis and fix plan.
 **Writes:** Appends to `HANDOFF.md`.
+
+---
+
+## test-writer
+
+**Role:** Specifies, writes, runs, and audits tests. Produces a Test Specification before writing any code.
+**Invoke when:** After writing new features, fixing bugs, when coverage needs improvement, or for a full test health report.
+**Input:** Feature description or bugfix summary, source files, existing test files, `CONVENTIONS.md`.
+**Output:** Test files, Test Specification, Coverage Map and Fulfillment Score.
+**Writes:** Test files, appends to `HANDOFF.md`.
+
+---
+
+## issue-logger
+
+**Role:** Logs bugs, missing features, incomplete phases, and actionable issues discovered during work to `docs/issues/`.
+**Invoke when:** Any agent discovers a problem that is out of scope for the current session.
+**Input:** Issue description and context from the discovering agent.
+**Output:** `docs/issues/YYYY-MM-DD-<slug>.md`.
+**Writes:** Issue file only — does not append to `HANDOFF.md`.

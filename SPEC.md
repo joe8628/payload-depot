@@ -42,7 +42,9 @@ rig/
 │   ├── code-reviewer.md
 │   ├── docs-writer.md
 │   ├── security-auditor.md
-│   └── debugger.md
+│   ├── debugger.md
+│   ├── test-writer.md
+│   └── issue-logger.md
 │
 ├── skills/                          ← canonical skill prompts (LLM-agnostic)
 │   ├── tdd.md
