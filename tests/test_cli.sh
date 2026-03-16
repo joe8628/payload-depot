@@ -7,32 +7,32 @@ source "$RIG_DIR/tests/lib.sh"
 echo "=== CLI Tests ==="
 
 echo ""
-echo "-- rig version --"
-output=$("$RIG_DIR/rig" version 2>&1) || true
+echo "-- rig-stage version --"
+output=$("$RIG_DIR/rig-stage" version 2>&1) || true
 assert_contains "version outputs version string" "1.0.0" "$output"
 
 echo ""
-echo "-- rig help --"
-output=$("$RIG_DIR/rig" help 2>&1) || true
+echo "-- rig-stage help --"
+output=$("$RIG_DIR/rig-stage" help 2>&1) || true
 assert_contains "help mentions install" "install" "$output"
 assert_contains "help mentions list" "list" "$output"
 
 echo ""
-echo "-- rig unknown command --"
-code=0; "$RIG_DIR/rig" unknown-cmd 2>/dev/null || code=$?
+echo "-- rig-stage unknown command --"
+code=0; "$RIG_DIR/rig-stage" unknown-cmd 2>/dev/null || code=$?
 assert_exit_code "unknown command exits 1" "1" "$code"
 
 echo ""
-echo "-- rig install unknown target --"
+echo "-- rig-stage install unknown target --"
 tmp=$(mktemp -d) && git -C "$tmp" init -q
-code=0; (cd "$tmp" && "$RIG_DIR/rig" install --target nonexistent 2>/dev/null) || code=$?
+code=0; (cd "$tmp" && "$RIG_DIR/rig-stage" install --target nonexistent 2>/dev/null) || code=$?
 assert_exit_code "unknown target exits 3" "3" "$code"
 rm -rf "$tmp"
 
 echo ""
-echo "-- rig install no git repo --"
+echo "-- rig-stage install no git repo --"
 tmp=$(mktemp -d)
-code=0; (cd "$tmp" && "$RIG_DIR/rig" install 2>/dev/null) || code=$?
+code=0; (cd "$tmp" && "$RIG_DIR/rig-stage" install 2>/dev/null) || code=$?
 assert_exit_code "no git repo exits 2" "2" "$code"
 rm -rf "$tmp"
 

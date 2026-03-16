@@ -3,25 +3,38 @@
 CLI scaffold that bootstraps any project with Claude Code agents, skills, session
 templates, config files, and a codebase context index in a single command.
 
-## Quick start
+## Install globally
 
 ```bash
-./rig install
+make install   # symlinks rig-stage → ~/.local/bin/rig-stage
+```
+
+Then use from any project:
+
+```bash
+cd my-project
+rig-stage install
+```
+
+Or run directly without installing:
+
+```bash
+./rig-stage install
 ```
 
 ## Usage
 
 ```bash
-./rig install                        # Install for Claude Code (default)
-./rig install --target claude-code   # Explicit target
-./rig install --force                # Overwrite existing config files
-./rig install --dry-run              # Preview without writing files
-./rig install --no-hooks             # Skip pre-commit hook
-./rig install --no-codebase-index    # Skip ccindex init
+./rig-stage install                        # Install for Claude Code (default)
+./rig-stage install --target claude-code   # Explicit target
+./rig-stage install --force                # Overwrite existing config files
+./rig-stage install --dry-run              # Preview without writing files
+./rig-stage install --no-hooks             # Skip pre-commit hook
+./rig-stage install --no-codebase-index    # Skip ccindex init
 
-./rig list      # List available agents and skills
-./rig version   # Print Rig version
-./rig help      # Print usage
+./rig-stage list      # List available agents and skills
+./rig-stage version   # Print Rig version
+./rig-stage help      # Print usage
 ```
 
 ## Requirements

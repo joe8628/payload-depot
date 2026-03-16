@@ -8,7 +8,7 @@
 
 ## 1. Overview
 
-Rig is a CLI tool and scaffold repository. Running `rig install` in any project root copies a predefined set of AI agent prompts, skill prompts, session templates, config files, and git hooks into the correct locations for the target LLM tool. It then invokes the context manager installer.
+Rig is a CLI tool and scaffold repository. Running `rig-stage install` in any project root copies a predefined set of AI agent prompts, skill prompts, session templates, config files, and git hooks into the correct locations for the target LLM tool. It then invokes the context manager installer.
 
 The system has two layers:
 
@@ -23,7 +23,7 @@ This spec covers the v1.0 Claude Code target. Future targets (OpenAI, Gemini) fo
 
 - Rig is a developer tool. The user is a technical operator running it from a terminal.
 - The `rig` entrypoint is a single bash script for v1.0. No runtime dependencies beyond bash, git, and standard Unix utilities (`cp`, `chmod`, `mkdir`, `cat`).
-- The target project must have a git repository initialised (`.git/` must exist) before running `rig install`.
+- The target project must have a git repository initialised (`.git/` must exist) before running `rig-stage install`.
 - Context manager is a pre-existing external component. Rig invokes it but does not own it.
 - All agent and skill files are UTF-8 plain text markdown.
 - v1.0 supports Python, TypeScript, and C/C++ projects.
@@ -108,12 +108,12 @@ rig <command> [options]
 
 ### 4.2 Commands
 
-#### `rig install`
+#### `rig-stage install`
 
 Bootstraps the current working directory as an AI-assisted project.
 
 ```
-rig install [--target <name>] [--force] [--dry-run] [--no-hooks] [--no-context-manager]
+rig-stage install [--target <name>] [--force] [--dry-run] [--no-hooks] [--no-context-manager]
 ```
 
 | Flag | Default | Description |
@@ -124,15 +124,15 @@ rig install [--target <name>] [--force] [--dry-run] [--no-hooks] [--no-context-m
 | `--no-hooks` | false | Skip git hook installation |
 | `--no-codebase-index` | false | Skip codebase context index initialisation (`ccindex init`) |
 
-#### `rig list`
+#### `rig-stage list`
 
 Prints all available agents and skills with their descriptions. No flags.
 
-#### `rig version`
+#### `rig-stage version`
 
 Prints the current Rig version.
 
-#### `rig help`
+#### `rig-stage help`
 
 Prints usage information.
 
@@ -176,7 +176,7 @@ Skipped files are reported as:
 
 ### 5.1 Pre-flight Checks
 
-Before any file operations, `rig install` validates:
+Before any file operations, `rig-stage install` validates:
 
 1. Current directory contains a `.git/` folder — abort with exit code 2 if not
 2. Target adapter exists under `targets/<name>/` — abort with exit code 3 if not
@@ -540,7 +540,7 @@ To add support for a new LLM tool:
    - How agent invocation differs from Claude Code
    - Any prompt syntax changes required
    - Known compatibility issues with canonical agent files
-5. Add target to the `rig list-targets` output
+5. Add target to the `rig-stage list-targets` output
 
 ---
 
@@ -560,7 +560,7 @@ The repo map is also injected into every session via `CLAUDE.md` using `@.codeba
 
 ### 8.2 Invocation
 
-During `rig install`, after all file copies and hook installation, Rig invokes:
+During `rig-stage install`, after all file copies and hook installation, Rig invokes:
 
 ```bash
 ccindex init
@@ -624,20 +624,20 @@ tests/
     └── cpp-project/          ← minimal C++ project with CMakeLists.txt
 ```
 
-### 10.2 Test Cases — `rig install`
+### 10.2 Test Cases — `rig-stage install`
 
 | Test | Description | Expected result |
 |---|---|---|
-| fresh-install-python | Run `rig install` in a clean Python fixture | All agents, skills, config, session, hook installed; exit 0 |
-| fresh-install-typescript | Run `rig install` in a clean TS fixture | All agents, skills, config, session, hook installed; exit 0 |
-| fresh-install-cpp | Run `rig install` in a clean C++ fixture | All agents, skills, config, session, hook installed; exit 0 |
-| skip-existing-config | Run `rig install` where CLAUDE.md already exists | CLAUDE.md not overwritten; warning printed; exit 0 |
-| force-overwrite | Run `rig install --force` where CLAUDE.md exists | CLAUDE.md overwritten; exit 0 |
-| dry-run | Run `rig install --dry-run` | No files written; install plan printed; exit 0 |
-| no-git-repo | Run `rig install` in directory with no `.git/` | Error printed; exit 2 |
-| unknown-target | Run `rig install --target nonexistent` | Error printed; exit 3 |
-| no-hooks | Run `rig install --no-hooks` | All files installed; hook not installed; exit 0 |
-| no-codebase-index | Run `rig install --no-codebase-index` | All files installed; ccindex not invoked; exit 0 |
+| fresh-install-python | Run `rig-stage install` in a clean Python fixture | All agents, skills, config, session, hook installed; exit 0 |
+| fresh-install-typescript | Run `rig-stage install` in a clean TS fixture | All agents, skills, config, session, hook installed; exit 0 |
+| fresh-install-cpp | Run `rig-stage install` in a clean C++ fixture | All agents, skills, config, session, hook installed; exit 0 |
+| skip-existing-config | Run `rig-stage install` where CLAUDE.md already exists | CLAUDE.md not overwritten; warning printed; exit 0 |
+| force-overwrite | Run `rig-stage install --force` where CLAUDE.md exists | CLAUDE.md overwritten; exit 0 |
+| dry-run | Run `rig-stage install --dry-run` | No files written; install plan printed; exit 0 |
+| no-git-repo | Run `rig-stage install` in directory with no `.git/` | Error printed; exit 2 |
+| unknown-target | Run `rig-stage install --target nonexistent` | Error printed; exit 3 |
+| no-hooks | Run `rig-stage install --no-hooks` | All files installed; hook not installed; exit 0 |
+| no-codebase-index | Run `rig-stage install --no-codebase-index` | All files installed; ccindex not invoked; exit 0 |
 
 ### 10.3 Test Cases — `pre-commit` hook
 
@@ -666,7 +666,7 @@ RIG_TEST_VERBOSE=1 bash tests/test_install.sh
 
 ## 11. Error Handling
 
-### 11.1 `rig install` Errors
+### 11.1 `rig-stage install` Errors
 
 All errors print a clear message to stderr with the prefix `[rig] ERROR:` and a hint for resolution where applicable.
 
@@ -675,7 +675,7 @@ All errors print a clear message to stderr with the prefix `[rig] ERROR:` and a 
              Initialise a git repository first: git init
 
 [rig] ERROR: Target 'foobar' not found. Available targets: claude-code
-             Run `rig list-targets` for details.
+             Run `rig-stage list-targets` for details.
 
 [rig] ERROR: Context manager install failed (exit code 1).
              Check context-manager/install.sh output above.
@@ -780,6 +780,6 @@ Every agent, before ending a session, must:
 ## 15. Open Questions
 
 - Should `rig` be a bash script (zero dependencies, maximum portability) or a Python CLI (richer arg parsing, better testability)? **Decision deferred. Start with bash for v1.0; revisit if argument complexity grows.**
-- Should session files (SCRATCHPAD, DECISIONS, HANDOFF) be per-session (wiped on each `rig install`) or accumulated? **Decision: SCRATCHPAD.md wiped on install (ephemeral). HANDOFF.md and DECISIONS.md committed to git and accumulated — they are the cross-session context persistence layer.**
+- Should session files (SCRATCHPAD, DECISIONS, HANDOFF) be per-session (wiped on each `rig-stage install`) or accumulated? **Decision: SCRATCHPAD.md wiped on install (ephemeral). HANDOFF.md and DECISIONS.md committed to git and accumulated — they are the cross-session context persistence layer.**
 - Should `rig` support updating existing installs (`rig update`) that refreshes only agent and skill files while preserving user config? **Out of scope for v1.0. Log as v1.1 feature.**
 - Should `ccindex init` be a hard requirement or optional? **Optional via `--no-codebase-index`. Missing `ccindex` binary is a warning, not an error — exit code 4 only on failed execution, not on missing binary.**

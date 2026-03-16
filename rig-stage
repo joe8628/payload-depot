@@ -6,14 +6,14 @@ RIG_VERSION="1.0.0"
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-log()  { echo "[rig] $*"; }
-err()  { echo "[rig] ERROR: $*" >&2; }
-skip() { echo "[rig] ~ Skipped              → $*"; }
-ok()   { echo "[rig] ✓ $*"; }
+log()  { echo "[rig-stage] $*"; }
+err()  { echo "[rig-stage] ERROR: $*" >&2; }
+skip() { echo "[rig-stage] ~ Skipped              → $*"; }
+ok()   { echo "[rig-stage] ✓ $*"; }
 
 usage() {
   cat <<EOF
-Usage: rig <command> [options]
+Usage: rig-stage <command> [options]
 
 Commands:
   install   Bootstrap the current directory as an AI-assisted project
@@ -32,7 +32,7 @@ EOF
 
 # ── Commands ──────────────────────────────────────────────────────────────────
 
-cmd_version() { echo "rig $RIG_VERSION"; }
+cmd_version() { echo "rig-stage $RIG_VERSION"; }
 
 cmd_help() { usage; }
 
@@ -72,7 +72,7 @@ cmd_install() {
   local adapter_dir="$RIG_DIR/targets/$target"
   if [[ ! -d "$adapter_dir" ]]; then
     err "Target '$target' not found. Available targets: $(ls "$RIG_DIR/targets/" | tr '\n' ' ')"
-    err "Run \`rig help\` for details."
+    err "Run \`rig-stage help\` for details."
     exit 3
   fi
 
@@ -90,7 +90,7 @@ cmd_install() {
   # Dry-run wrapper
   maybe() {
     if $dry_run; then
-      echo "[rig] [dry-run] $*"
+      echo "[rig-stage] [dry-run] $*"
     else
       "$@"
     fi

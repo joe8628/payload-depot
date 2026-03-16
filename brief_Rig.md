@@ -60,7 +60,7 @@ rig/
 ├── hooks/
 │   └── pre-commit
 ├── context-manager/               ← existing submodule or install hook
-└── rig                            ← main CLI entrypoint
+└── rig-stage                      ← main CLI entrypoint
 ```
 
 ---
@@ -144,9 +144,9 @@ Structured output file written by each agent when it finishes, read by the next 
 
 ---
 
-## `rig` CLI
+## `rig-stage` CLI
 
-The main entrypoint. Replaces `install.sh` with a named command that supports a `--target` flag for multi-LLM installs. Defaults to `claude-code`.
+The main entrypoint. Named `rig-stage` to avoid collision with the system `rig` apt package. Supports a `--target` flag for multi-LLM installs. Defaults to `claude-code`. Install globally with `make install`.
 
 ### Behaviour (unconditional copy with safe exceptions)
 
@@ -162,15 +162,15 @@ The main entrypoint. Replaces `install.sh` with a named command that supports a 
 
 ```bash
 # Install for Claude Code (default)
-./rig install
+./rig-stage install
 
 # Install for a specific target
-./rig install --target claude-code
-./rig install --target openai       # future
-./rig install --target gemini       # future
+./rig-stage install --target claude-code
+./rig-stage install --target openai       # future
+./rig-stage install --target gemini       # future
 
 # Force overwrite of existing config files
-./rig install --force
+./rig-stage install --force
 ```
 
 ---
@@ -266,7 +266,7 @@ Each directory under `targets/` must contain:
 6. `debugger` agent
 7. `pre-commit` hook
 8. `commit-msg` skill
-9. `rig` CLI entrypoint with `install` command
+9. `rig-stage` CLI entrypoint with `install` command
 10. `SCRATCHPAD.md` and `DECISIONS.md` templates
 11. Remaining agents and skills
 12. Prompt versioning headers on all agent files

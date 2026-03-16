@@ -8,8 +8,9 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ### Added
 
-- `rig` CLI entrypoint with `install`, `list`, `version`, and `help` commands
-- `rig install` flags: `--target`, `--force`, `--dry-run`, `--no-hooks`, `--no-codebase-index`
+- `rig-stage` CLI entrypoint with `install`, `list`, `version`, and `help` commands (named `rig-stage` to avoid collision with `rig` apt package)
+- `rig-stage install` flags: `--target`, `--force`, `--dry-run`, `--no-hooks`, `--no-codebase-index`
+- `Makefile` with `install` target (symlink to `~/.local/bin/rig-stage`) and `uninstall` target
 - Claude Code target adapter (`targets/claude-code/adapter.sh`)
 - 9 agents with prompt versioning headers: `architect`, `planner`, `code-writer`, `code-reviewer`, `docs-writer`, `security-auditor`, `debugger`, `test-writer`, `issue-logger`
 - 10 skills with prompt versioning headers: `tdd`, `linting`, `type-checking`, `dependency-audit`, `adr`, `readme-gen`, `openapi-lint`, `changelog`, `commit-msg`, `env-setup`

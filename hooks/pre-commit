@@ -5,7 +5,7 @@
 
 set -uo pipefail
 
-PREFIX="[rig:pre-commit]"
+PREFIX="[rig-stage:pre-commit]"
 
 log()  { echo "$PREFIX $*"; }
 warn() { echo "$PREFIX WARNING: $*" >&2; }

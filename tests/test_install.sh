@@ -22,7 +22,7 @@ echo "=== Install Tests ==="
 echo ""
 echo "-- fresh-install-python --"
 dir=$(setup_fixture python-project)
-(cd "$dir" && "$RIG_DIR/rig" install --no-codebase-index 2>&1) || true
+(cd "$dir" && "$RIG_DIR/rig-stage" install --no-codebase-index 2>&1) || true
 assert_dir_exists  "agents dir created"           "$dir/.claude/agents"
 assert_dir_exists  "skills dir created"           "$dir/.claude/skills"
 assert_file_exists "CLAUDE.md written"            "$dir/CLAUDE.md"
@@ -39,7 +39,7 @@ cleanup "$dir"
 echo ""
 echo "-- fresh-install-typescript --"
 dir=$(setup_fixture typescript-project)
-(cd "$dir" && "$RIG_DIR/rig" install --no-codebase-index 2>&1) || true
+(cd "$dir" && "$RIG_DIR/rig-stage" install --no-codebase-index 2>&1) || true
 assert_dir_exists  "agents dir created"  "$dir/.claude/agents"
 assert_file_exists "CLAUDE.md written"   "$dir/CLAUDE.md"
 assert_file_exists "HANDOFF.md written"  "$dir/HANDOFF.md"
@@ -49,7 +49,7 @@ cleanup "$dir"
 echo ""
 echo "-- fresh-install-cpp --"
 dir=$(setup_fixture cpp-project)
-(cd "$dir" && "$RIG_DIR/rig" install --no-codebase-index 2>&1) || true
+(cd "$dir" && "$RIG_DIR/rig-stage" install --no-codebase-index 2>&1) || true
 assert_dir_exists  "agents dir created"  "$dir/.claude/agents"
 assert_file_exists "CLAUDE.md written"   "$dir/CLAUDE.md"
 assert_file_exists "HANDOFF.md written"  "$dir/HANDOFF.md"
@@ -60,7 +60,7 @@ echo ""
 echo "-- skip-existing-config --"
 dir=$(setup_fixture python-project)
 echo "# existing" > "$dir/CLAUDE.md"
-output=$(cd "$dir" && "$RIG_DIR/rig" install --no-codebase-index 2>&1) || true
+output=$(cd "$dir" && "$RIG_DIR/rig-stage" install --no-codebase-index 2>&1) || true
 assert_contains    "skip message printed"        "Skipped" "$output"
 assert_eq          "CLAUDE.md not overwritten"   "# existing" "$(cat "$dir/CLAUDE.md")"
 cleanup "$dir"
@@ -70,7 +70,7 @@ echo ""
 echo "-- force-overwrite --"
 dir=$(setup_fixture python-project)
 echo "# existing" > "$dir/CLAUDE.md"
-(cd "$dir" && "$RIG_DIR/rig" install --force --no-codebase-index 2>&1) || true
+(cd "$dir" && "$RIG_DIR/rig-stage" install --force --no-codebase-index 2>&1) || true
 content=$(cat "$dir/CLAUDE.md")
 [[ "$content" != "# existing" ]] && result=0 || result=1
 assert_eq "CLAUDE.md overwritten" "0" "$result"
@@ -80,7 +80,7 @@ cleanup "$dir"
 echo ""
 echo "-- dry-run --"
 dir=$(setup_fixture python-project)
-output=$(cd "$dir" && "$RIG_DIR/rig" install --dry-run --no-codebase-index 2>&1) || true
+output=$(cd "$dir" && "$RIG_DIR/rig-stage" install --dry-run --no-codebase-index 2>&1) || true
 assert_contains    "dry-run output shown"        "dry-run" "$output"
 [[ ! -f "$dir/CLAUDE.md" ]] && result=0 || result=1
 assert_eq          "dry-run: no files written"   "0" "$result"
@@ -90,7 +90,7 @@ cleanup "$dir"
 echo ""
 echo "-- no-git-repo --"
 dir=$(mktemp -d)
-code=0; (cd "$dir" && "$RIG_DIR/rig" install --no-codebase-index 2>/dev/null) || code=$?
+code=0; (cd "$dir" && "$RIG_DIR/rig-stage" install --no-codebase-index 2>/dev/null) || code=$?
 assert_exit_code "no git repo exits 2" "2" "$code"
 cleanup "$dir"
 
@@ -98,7 +98,7 @@ cleanup "$dir"
 echo ""
 echo "-- unknown-target --"
 dir=$(setup_fixture python-project)
-code=0; (cd "$dir" && "$RIG_DIR/rig" install --target nonexistent --no-codebase-index 2>/dev/null) || code=$?
+code=0; (cd "$dir" && "$RIG_DIR/rig-stage" install --target nonexistent --no-codebase-index 2>/dev/null) || code=$?
 assert_exit_code "unknown target exits 3" "3" "$code"
 cleanup "$dir"
 
@@ -106,7 +106,7 @@ cleanup "$dir"
 echo ""
 echo "-- no-hooks --"
 dir=$(setup_fixture python-project)
-(cd "$dir" && "$RIG_DIR/rig" install --no-hooks --no-codebase-index 2>&1) || true
+(cd "$dir" && "$RIG_DIR/rig-stage" install --no-hooks --no-codebase-index 2>&1) || true
 [[ ! -f "$dir/.git/hooks/pre-commit" ]] && result=0 || result=1
 assert_eq "hook not installed" "0" "$result"
 cleanup "$dir"
@@ -115,7 +115,7 @@ cleanup "$dir"
 echo ""
 echo "-- no-codebase-index --"
 dir=$(setup_fixture python-project)
-output=$(cd "$dir" && "$RIG_DIR/rig" install --no-codebase-index 2>&1) || true
+output=$(cd "$dir" && "$RIG_DIR/rig-stage" install --no-codebase-index 2>&1) || true
 assert_contains "skip message for index" "codebase index" "$output"
 cleanup "$dir"
 
