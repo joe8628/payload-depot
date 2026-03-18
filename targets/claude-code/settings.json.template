@@ -1,12 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "read",
-      "write",
-      "bash"
+      "Read",
+      "Write",
+      "Bash"
     ],
     "deny": [
-      "network"
+      "Network"
     ]
   },
   "tools": {
