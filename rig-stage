@@ -17,6 +17,7 @@ Usage: rig-stage <command> [options]
 
 Commands:
   install   Bootstrap the current directory as an AI-assisted project
+  upgrade   Pull latest fixes from GitHub into ~/.rig
   list      List available agents and skills
   version   Print Rig version
   help      Print this message
@@ -35,6 +36,29 @@ EOF
 cmd_version() { echo "rig-stage $RIG_VERSION"; }
 
 cmd_help() { usage; }
+
+cmd_upgrade() {
+  if [[ ! -d "$RIG_DIR/.git" ]]; then
+    err "No .git directory found in $RIG_DIR — cannot upgrade."
+    exit 1
+  fi
+
+  local before
+  before=$(git -C "$RIG_DIR" rev-parse HEAD)
+
+  log "Pulling latest from GitHub..."
+  git -C "$RIG_DIR" pull --ff-only
+
+  local after
+  after=$(git -C "$RIG_DIR" rev-parse HEAD)
+
+  if [[ "$before" == "$after" ]]; then
+    log "Already up to date."
+  else
+    ok "Upgraded $(git -C "$RIG_DIR" rev-parse --short "$before") → $(git -C "$RIG_DIR" rev-parse --short "$after")"
+    git -C "$RIG_DIR" log --oneline "${before}..${after}"
+  fi
+}
 
 cmd_list() {
   echo "Agents:"
@@ -226,6 +250,7 @@ shift || true
 
 case "$COMMAND" in
   install) cmd_install "$@" ;;
+  upgrade) cmd_upgrade ;;
   list)    cmd_list ;;
   version) cmd_version ;;
   help|--help|-h) cmd_help ;;
