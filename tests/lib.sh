@@ -59,6 +59,18 @@ assert_contains() {
   fi
 }
 
+assert_not_file_exists() {
+  local description="$1" file="$2"
+  if [[ ! -f "$file" ]]; then
+    echo "  ✓ $description"
+    PASS=$((PASS + 1))
+  else
+    echo "  ✗ $description"
+    echo "    file should not exist: $file"
+    FAIL=$((FAIL + 1))
+  fi
+}
+
 assert_not_contains() {
   local description="$1" needle="$2" haystack="$3"
   if echo "$haystack" | grep -qF "$needle"; then

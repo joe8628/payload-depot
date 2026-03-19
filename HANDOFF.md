@@ -103,3 +103,36 @@
 - Next milestone is v1.2: OpenSpec suite (F-008–F-016), starting with F-008 (openspec-init)
 - All 71 tests must continue to pass — run `bash tests/test_install.sh` before committing
 - **Follow the new session protocol**: after each feature commit, update SCRATCHPAD.md, HANDOFF.md, DECISIONS.md, then `git add HANDOFF.md DECISIONS.md && git commit -m "handoff: ..." && git push`
+
+---
+
+### Agent: Claude Sonnet 4.6
+**Completed:** 2026-03-19
+**Task:** F-007 health check system — rig-health-check.sh, tests, recursion guard
+
+#### Output Files
+- `targets/claude-code/rig-health-check.sh` — new: 31-check post-install health check; writes `.rig-verified` on full pass; exits 1 on any failure
+- `targets/claude-code/session-start.sh` — added step 0: run health check when `.rig-verified` absent (with `RIG_HEALTH_CHECK_ACTIVE` guard)
+- `targets/claude-code/adapter.sh` — `adapter_post_install` now installs `rig-health-check.sh` and clears `.rig-verified`
+- `rig-stage` — `cmd_update` explicitly clears `.rig-verified` after adapter_post_install
+- `tests/lib.sh` — added `assert_not_file_exists` helper
+- `tests/test_install.sh` — 10 new tests for F-007 health check (81 total, all passing)
+- `.claude/hooks/rig-health-check.sh` — live copy updated
+- `.claude/hooks/session-start.sh` — live copy updated
+
+#### Assumptions Made
+- Health check should be advisory-only from session-start.sh (`|| true`) — a failing check should not block the user's work
+- Recursion guard via env var (`RIG_HEALTH_CHECK_ACTIVE=1`) is the simplest safe fix; no marker file needed
+- Agent count threshold ≥9 and skill count ≥10 are hardcoded to match current Rig v1.1 — must be updated if agents/skills are added
+
+#### What Was Not Done
+- F-008–F-016 (OpenSpec suite) — v1.2, not started
+- Health check does not test `session-end.sh` behaviour (Stop hook output only visible in Claude UI, untestable in bash)
+
+#### Uncertainties
+- Health check thresholds (≥9 agents, ≥10 skills) will need bumping when new agents/skills are added to Rig
+
+#### Instructions for Next Agent
+- All 81 tests pass — run `bash tests/test_install.sh` to confirm before any changes
+- v1.1 is complete. Next: v1.2 OpenSpec suite, start with F-008 (openspec-init)
+- Health check thresholds are in `targets/claude-code/rig-health-check.sh` lines 108+113 — update when adding agents/skills

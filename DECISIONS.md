@@ -63,3 +63,17 @@
 - **Rationale:** Claude Code reads MCP server config from the `mcpServers` key inside `settings.json`. The separate `mcp.json` approach is undocumented and non-functional.
 - **Affected files:** `targets/claude-code/settings.json.template`, `.claude/settings.json`
 - **Date:** 2026-03-19
+
+### Health check recursion guard uses env var, not a second marker file
+- **Decision:** `rig-health-check.sh` exports `RIG_HEALTH_CHECK_ACTIVE=1` before calling `session-start.sh`. `session-start.sh` checks this var before triggering the health check.
+- **Alternatives considered:** A second marker file (e.g. `.rig-health-running`) — would work but adds filesystem state; would leave stale file if the process is killed mid-run.
+- **Rationale:** Env var is scoped to the process and its children — it disappears automatically when the shell exits, leaving no stale state.
+- **Affected files:** `targets/claude-code/rig-health-check.sh`, `targets/claude-code/session-start.sh`
+- **Date:** 2026-03-19
+
+### Health check is advisory-only from session-start.sh
+- **Decision:** `session-start.sh` runs the health check with `|| true`, so a failing check never blocks the user's prompt.
+- **Alternatives considered:** Exit non-zero to block the session until checks pass — would prevent broken installs from silently proceeding, but would also block work on machines with unusual setups (no network for git pull, etc).
+- **Rationale:** The health check is a diagnostic aid. It should surface problems loudly but never prevent the user from working. Manual re-run is always available: `rm .rig-verified && bash .claude/hooks/rig-health-check.sh`.
+- **Affected files:** `targets/claude-code/session-start.sh`
+- **Date:** 2026-03-19

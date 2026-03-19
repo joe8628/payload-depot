@@ -184,6 +184,8 @@ cmd_update() {
   done
 
   adapter_post_install
+  # adapter_post_install already clears .rig-verified; make explicit here too
+  rm -f ".rig-verified"
 
   log "Done. $agent_count agents, $skill_count skills updated."
 }
@@ -353,6 +355,7 @@ cmd_install() {
 
 # Rig session files — ephemeral, not committed
 SCRATCHPAD.md
+.rig-verified
 
 # Codebase context — local vector DB, not committed
 .codebase-context/chroma/

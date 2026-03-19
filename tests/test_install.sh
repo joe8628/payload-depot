@@ -332,4 +332,73 @@ exit_code=$(cd "$dir" && "$RIG_DIR/rig-stage" update 2>&1; echo $?)
 assert_eq "update without git exits 2" "2" "$(cd "$dir" && "$RIG_DIR/rig-stage" update 2>/dev/null; echo $?)"
 rm -rf "$dir"
 
+# ── F-007: health check (rig-health-check.sh) ─────────────────────────────────
+
+# 31. rig-health-check.sh is installed into .claude/hooks/
+echo ""
+echo "-- health-check-installed (F-007) --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$RIG_DIR/rig-stage" install --no-codebase-index 2>&1) || true
+assert_file_exists "rig-health-check.sh installed" "$dir/.claude/hooks/rig-health-check.sh"
+assert_contains    "rig-health-check.sh executable" "x" \
+  "$(test -x "$dir/.claude/hooks/rig-health-check.sh" && echo x || echo '')"
+cleanup "$dir"
+
+# 32. health check passes on a fresh install and writes .rig-verified
+echo ""
+echo "-- health-check-passes-fresh (F-007) --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$RIG_DIR/rig-stage" install --no-codebase-index 2>&1) || true
+rm -f "$dir/.rig-verified"
+hc_output=$(cd "$dir" && bash ".claude/hooks/rig-health-check.sh" 2>&1)
+assert_contains    "health check passes"      "0 failed"     "$hc_output"
+assert_file_exists ".rig-verified written"    "$dir/.rig-verified"
+assert_contains    ".rig-verified has marker" "RIG_VERIFIED=true" "$(cat "$dir/.rig-verified")"
+cleanup "$dir"
+
+# 33. health check is skipped on second session-start when .rig-verified exists
+echo ""
+echo "-- health-check-skipped-when-verified (F-007) --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$RIG_DIR/rig-stage" install --no-codebase-index 2>&1) || true
+# Ensure .rig-verified present (write it manually)
+printf "RIG_VERIFIED=true\nTIMESTAMP=test\nCHECKS=0 passed\n" > "$dir/.rig-verified"
+ss_output=$(cd "$dir" && bash ".claude/hooks/session-start.sh" 2>&1)
+assert_not_contains "health check not re-run" "Running post-install health check" "$ss_output"
+cleanup "$dir"
+
+# 34. adapter_post_install clears .rig-verified on update (forces re-check)
+echo ""
+echo "-- health-check-cleared-on-update (F-007) --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$RIG_DIR/rig-stage" install --no-codebase-index 2>&1) || true
+printf "RIG_VERIFIED=true\nTIMESTAMP=test\nCHECKS=0 passed\n" > "$dir/.rig-verified"
+(cd "$dir" && "$RIG_DIR/rig-stage" update 2>&1) || true
+assert_not_file_exists ".rig-verified cleared after update" "$dir/.rig-verified"
+cleanup "$dir"
+
+# 35. session-start calls health check when .rig-verified is absent
+echo ""
+echo "-- session-start-triggers-health-check (F-007) --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$RIG_DIR/rig-stage" install --no-codebase-index 2>&1) || true
+rm -f "$dir/.rig-verified"
+ss_output=$(cd "$dir" && bash ".claude/hooks/session-start.sh" 2>&1)
+assert_contains "session-start runs health check" "Running post-install health check" "$ss_output"
+assert_file_exists ".rig-verified written by session-start" "$dir/.rig-verified"
+cleanup "$dir"
+
+# 36. RIG_HEALTH_CHECK_ACTIVE guard prevents recursion
+echo ""
+echo "-- health-check-no-recursion (F-007) --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$RIG_DIR/rig-stage" install --no-codebase-index 2>&1) || true
+rm -f "$dir/.rig-verified"
+# Health check sets RIG_HEALTH_CHECK_ACTIVE=1 before calling session-start.sh;
+# session-start.sh must NOT call the health check again.
+hc_output=$(cd "$dir" && bash ".claude/hooks/rig-health-check.sh" 2>&1)
+health_check_count=$(echo "$hc_output" | grep -c "Running post-install health check" || true)
+assert_eq "health check runs exactly once" "1" "$health_check_count"
+cleanup "$dir"
+
 report
