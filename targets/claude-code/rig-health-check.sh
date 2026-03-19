@@ -66,13 +66,16 @@ check_dir  "skills dir"                   ".claude/skills"
 check_file "session-start.sh"             ".claude/hooks/session-start.sh"
 check_file "session-end.sh"               ".claude/hooks/session-end.sh"
 check_file "rig-health-check.sh"          ".claude/hooks/rig-health-check.sh"
+check_file "rig-skill-check.sh"           ".claude/hooks/rig-skill-check.sh"
+check_file "skills registry"              ".claude/skills/registry.md"
 check_file "pre-commit hook"              ".git/hooks/pre-commit"
 
 # ── Executability ──────────────────────────────────────────────────────────────
 echo ""
 echo "-- permissions --"
-check_exec "session-start.sh executable" ".claude/hooks/session-start.sh"
+check_exec "session-start.sh executable"  ".claude/hooks/session-start.sh"
 check_exec "session-end.sh executable"   ".claude/hooks/session-end.sh"
+check_exec "rig-skill-check.sh executable" ".claude/hooks/rig-skill-check.sh"
 check_exec "pre-commit executable"       ".git/hooks/pre-commit"
 
 # ── CLAUDE.md content ──────────────────────────────────────────────────────────
@@ -100,20 +103,21 @@ echo "-- .gitignore --"
 check_contains "SCRATCHPAD.md gitignored"  ".gitignore"  "SCRATCHPAD.md"
 check_contains ".rig-verified gitignored"  ".gitignore"  ".rig-verified"
 
-# ── Agent and skill counts ─────────────────────────────────────────────────────
+# ── Agent count ────────────────────────────────────────────────────────────────
 echo ""
 echo "-- agents / skills --"
 agent_count=$(find .claude/agents -name "*.md" 2>/dev/null | wc -l | tr -d ' ')
-skill_count=$(find .claude/skills -name "*.md" 2>/dev/null | wc -l | tr -d ' ')
 if [[ "$agent_count" -ge 9 ]]; then
   ok "agents installed ($agent_count)"
 else
   fail "agents: expected >=9, got $agent_count"
 fi
-if [[ "$skill_count" -ge 10 ]]; then
-  ok "skills installed ($skill_count)"
+
+# ── Skill check (delegates to rig-skill-check.sh) ──────────────────────────────
+if bash ".claude/hooks/rig-skill-check.sh" > /dev/null 2>&1; then
+  ok "skills valid (rig-skill-check passed)"
 else
-  fail "skills: expected >=10, got $skill_count"
+  fail "skills: rig-skill-check.sh failed — run: bash .claude/hooks/rig-skill-check.sh"
 fi
 
 # ── Session hook behaviour ─────────────────────────────────────────────────────
