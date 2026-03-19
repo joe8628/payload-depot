@@ -16,11 +16,13 @@ usage() {
 Usage: rig-stage <command> [options]
 
 Commands:
-  install   Bootstrap the current directory as an AI-assisted project
-  upgrade   Pull latest fixes from GitHub into ~/.rig and update current project
-  list      List available agents and skills
-  version   Print Rig version
-  help      Print this message
+  install        Bootstrap the current directory as an AI-assisted project
+  update         Refresh agents and skills without touching user config files
+  upgrade        Pull latest Rig source from GitHub then run update
+  list           List available agents and skills
+  list-targets   List available install targets
+  version        Print Rig version
+  help           Print this message
 
 Options for install:
   --target <name>       Target adapter to use (default: claude-code)
@@ -28,6 +30,9 @@ Options for install:
   --dry-run             Print install plan without writing files
   --no-hooks            Skip git hook installation
   --no-codebase-index   Skip codebase context index initialisation
+
+Options for update:
+  --target <name>       Target adapter to use (default: claude-code)
 EOF
 }
 
@@ -120,11 +125,67 @@ cmd_upgrade() {
   if [[ -d ".git" ]]; then
     log "Updating project install..."
     # Run the freshly-pulled script as a subprocess so we use the latest
-    # cmd_install — not the old version loaded into this bash process's memory.
-    bash "$RIG_DIR/rig-stage" install --force --no-codebase-index
+    # cmd_update — not the old version loaded into this bash process's memory.
+    # update never touches user config files, so no --force is needed.
+    bash "$RIG_DIR/rig-stage" update
   else
     skip "Project update (not inside a project directory)"
   fi
+}
+
+cmd_update() {
+  local target="claude-code"
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --target) target="$2"; shift 2 ;;
+      *) err "Unknown flag: $1"; exit 1 ;;
+    esac
+  done
+
+  if [[ ! -d ".git" ]]; then
+    err "No .git directory found in current path."
+    err "Initialise a git repository first: git init"
+    exit 2
+  fi
+
+  local adapter_dir="$RIG_DIR/targets/$target"
+  if [[ ! -f "$adapter_dir/adapter.sh" ]]; then
+    err "adapter.sh not found in $adapter_dir — run: rig-stage list-targets"
+    exit 1
+  fi
+
+  # shellcheck source=/dev/null
+  source "$adapter_dir/adapter.sh"
+
+  log "Updating agents and skills only (config files preserved)..."
+
+  adapter_pre_install
+  mkdir -p "$AGENT_INSTALL_PATH"
+  mkdir -p "$SKILL_INSTALL_PATH"
+
+  local agent_count=0
+  if compgen -G "$RIG_DIR/agents/*.md" > /dev/null 2>&1; then
+    agent_count=$(find "$RIG_DIR/agents" -name "*.md" | wc -l | tr -d ' ')
+    cp "$RIG_DIR/agents/"*.md "$AGENT_INSTALL_PATH/"
+  fi
+  ok "Agents updated  → $AGENT_INSTALL_PATH ($agent_count files)"
+
+  local skill_count=0
+  if compgen -G "$RIG_DIR/skills/*.md" > /dev/null 2>&1; then
+    skill_count=$(find "$RIG_DIR/skills" -name "*.md" | wc -l | tr -d ' ')
+    cp "$RIG_DIR/skills/"*.md "$SKILL_INSTALL_PATH/"
+  fi
+  ok "Skills updated  → $SKILL_INSTALL_PATH ($skill_count files)"
+
+  for pair in "${CONFIG_FILES[@]}"; do
+    local dest="${pair##*:}"
+    skip "$dest (user config — use install --force to overwrite)"
+  done
+
+  adapter_post_install
+
+  log "Done. $agent_count agents, $skill_count skills updated."
 }
 
 cmd_list() {
@@ -136,6 +197,23 @@ cmd_list() {
   echo "Skills:"
   for f in "$RIG_DIR/skills/"*.md; do
     [[ -f "$f" ]] && echo "  $(basename "$f" .md)"
+  done
+}
+
+cmd_list_targets() {
+  echo "Available targets:"
+  for adapter in "$RIG_DIR/targets/"*/adapter.sh; do
+    [[ -f "$adapter" ]] || continue
+    local target_dir
+    target_dir="$(dirname "$adapter")"
+    local name
+    name="$(basename "$target_dir")"
+    local desc=""
+    local readme="$target_dir/README.md"
+    if [[ -f "$readme" ]]; then
+      desc=$(awk '/^#[[:space:]]/{found=1; next} found && /[^[:space:]]/{print; exit}' "$readme")
+    fi
+    printf "  %-16s %s\n" "$name" "${desc:-(no description)}"
   done
 }
 
@@ -327,10 +405,12 @@ COMMAND="${1:-help}"
 shift || true
 
 case "$COMMAND" in
-  install) cmd_install "$@" ;;
-  upgrade) cmd_upgrade ;;
-  list)    cmd_list ;;
-  version) cmd_version ;;
+  install)      cmd_install "$@" ;;
+  update)       cmd_update "$@" ;;
+  upgrade)      cmd_upgrade ;;
+  list)         cmd_list ;;
+  list-targets) cmd_list_targets ;;
+  version)      cmd_version ;;
   help|--help|-h) cmd_help ;;
   *) err "Unknown command: $COMMAND"; exit 1 ;;
 esac

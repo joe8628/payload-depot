@@ -82,4 +82,19 @@ if $FAILED; then
   exit 1
 fi
 
+# ── Handoff reminder ──────────────────────────────────────────────────────────
+# Warn when code files are staged but HANDOFF.md has no entry for today.
+# This is a warning only — it never blocks the commit.
+STAGED=$(git diff --cached --name-only 2>/dev/null || true)
+if echo "$STAGED" | grep -qE '^(rig-stage|tests/|hooks/|targets/)'; then
+  today=$(date +%Y-%m-%d)
+  if ! grep -qF "$today" HANDOFF.md 2>/dev/null; then
+    echo "" >&2
+    warn "HANDOFF.md has no entry for $today."
+    warn "After this commit: update SCRATCHPAD.md, HANDOFF.md, DECISIONS.md"
+    warn "then: git add HANDOFF.md DECISIONS.md && git commit -m 'handoff: ...'"
+    echo "" >&2
+  fi
+fi
+
 exit 0

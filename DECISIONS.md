@@ -35,3 +35,31 @@
 - **Rationale:** The file accumulates across all sessions; a single date in the heading is meaningless and stays as a broken placeholder forever.
 - **Affected files:** `session/DECISIONS.md.template`, `DECISIONS.md`
 - **Date:** 2026-03-19
+
+### upgrade calls update, not install --force
+- **Decision:** `cmd_upgrade` runs `bash "$RIG_DIR/rig-stage" update` instead of `bash "$RIG_DIR/rig-stage" install --force --no-codebase-index`.
+- **Alternatives considered:** Keep `install --force` (original behaviour — clobbers all user config on every upgrade).
+- **Rationale:** `install --force` silently overwrites CLAUDE.md, CONVENTIONS.md, AGENTS.md, and settings.json — files the user has customised for their project. `update` copies only agent and skill `.md` files, which are Rig-versioned content the user never edits. Config files are preserved unconditionally.
+- **Affected files:** `rig-stage` (`cmd_upgrade`), `tests/test_install.sh`
+- **Date:** 2026-03-19
+
+### Session protocol trigger: per-feature-commit, not end-of-session
+- **Decision:** HANDOFF.md and DECISIONS.md are updated immediately after each completed feature or fix commit, not at "end of session."
+- **Alternatives considered:** Keep "end of session" trigger (original spec). End of session is undetectable in Claude Code — the Stop hook fires on every response, not just true session end. The agent loses track of the obligation across multiple tasks.
+- **Rationale:** Tying the ritual to a git commit gives a concrete, observable trigger. The pre-commit hook reinforces it with a warning. Memory rule enforces it across future sessions.
+- **Affected files:** `CLAUDE.md`, `targets/claude-code/CLAUDE.md.template`, `hooks/pre-commit`
+- **Date:** 2026-03-19
+
+### Pre-commit handoff warning is advisory, not blocking
+- **Decision:** The HANDOFF.md staleness check in `hooks/pre-commit` prints a warning but does not block the commit.
+- **Alternatives considered:** Block the commit until HANDOFF.md is updated (too aggressive — would block mid-feature commits where updating HANDOFF early makes no sense).
+- **Rationale:** The warning fires on any commit that touches `rig-stage`, `tests/`, `hooks/`, or `targets/` when HANDOFF.md lacks today's date. It reminds without interrupting. The agent can commit, then immediately follow up with the handoff commit.
+- **Affected files:** `hooks/pre-commit`
+- **Date:** 2026-03-19
+
+### MCP server configured in settings.json, not a separate mcp.json
+- **Decision:** The `mcpServers` key is added inside `.claude/settings.json`, not a separate `.claude/mcp.json` file.
+- **Alternatives considered:** `.claude/mcp.json` (what ccindex's `init` command documents — but this file does not exist in Claude Code's spec).
+- **Rationale:** Claude Code reads MCP server config from the `mcpServers` key inside `settings.json`. The separate `mcp.json` approach is undocumented and non-functional.
+- **Affected files:** `targets/claude-code/settings.json.template`, `.claude/settings.json`
+- **Date:** 2026-03-19

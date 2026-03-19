@@ -277,4 +277,59 @@ dirname_expected=$(basename "$dir")
 assert_contains "fallback name is dirname" "$dirname_expected" "$(cat "$dir/CLAUDE.md")"
 cleanup "$dir"
 
+# 25. F-002: list-targets shows claude-code with description
+echo ""
+echo "-- list-targets-shows-claude-code (F-002) --"
+output=$("$RIG_DIR/rig-stage" list-targets 2>&1)
+assert_contains "claude-code listed"          "claude-code"       "$output"
+assert_contains "claude-code has description" "Default Rig target" "$output"
+
+# 26. F-002: list-targets omits stubs without adapter.sh
+echo ""
+echo "-- list-targets-omits-stubs (F-002) --"
+assert_not_contains "openai not listed (no adapter.sh)" "openai"  "$output"
+assert_not_contains "gemini not listed (no adapter.sh)" "gemini"  "$output"
+
+# 27. F-003: update refreshes agents and skills
+echo ""
+echo "-- update-refreshes-agents-skills (F-003) --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$RIG_DIR/rig-stage" install --no-codebase-index 2>&1) || true
+output=$(cd "$dir" && "$RIG_DIR/rig-stage" update 2>&1)
+assert_contains "update agents line"  "Agents updated"  "$output"
+assert_contains "update skills line"  "Skills updated"  "$output"
+assert_dir_exists "agents dir still present" "$dir/.claude/agents"
+cleanup "$dir"
+
+# 28. F-003: update does NOT overwrite user config files
+echo ""
+echo "-- update-preserves-user-config (F-003) --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$RIG_DIR/rig-stage" install --no-codebase-index 2>&1) || true
+echo "user-sentinel" > "$dir/CLAUDE.md"
+echo "user-sentinel" > "$dir/CONVENTIONS.md"
+(cd "$dir" && "$RIG_DIR/rig-stage" update 2>&1) || true
+assert_contains "CLAUDE.md preserved"      "user-sentinel" "$(cat "$dir/CLAUDE.md")"
+assert_contains "CONVENTIONS.md preserved" "user-sentinel" "$(cat "$dir/CONVENTIONS.md")"
+cleanup "$dir"
+
+# 29. F-003: update prints skip messages for each config file
+echo ""
+echo "-- update-skip-messages (F-003) --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$RIG_DIR/rig-stage" install --no-codebase-index 2>&1) || true
+output=$(cd "$dir" && "$RIG_DIR/rig-stage" update 2>&1)
+assert_contains "CLAUDE.md skip shown"       "CLAUDE.md"       "$output"
+assert_contains "CONVENTIONS.md skip shown"  "CONVENTIONS.md"  "$output"
+assert_contains "settings.json skip shown"   "settings.json"   "$output"
+cleanup "$dir"
+
+# 30. F-003: update requires a .git directory
+echo ""
+echo "-- update-requires-git (F-003) --"
+dir=$(mktemp -d)
+exit_code=$(cd "$dir" && "$RIG_DIR/rig-stage" update 2>&1; echo $?)
+assert_eq "update without git exits 2" "2" "$(cd "$dir" && "$RIG_DIR/rig-stage" update 2>/dev/null; echo $?)"
+rm -rf "$dir"
+
 report

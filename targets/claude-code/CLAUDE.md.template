@@ -33,11 +33,13 @@ conditions, and expected outputs.
 **During every session:**
 - Append working notes and decisions to `SCRATCHPAD.md` as you go.
 
-**At the end of every session:**
-1. Finalise `SCRATCHPAD.md` with a session summary.
+**After every completed feature or fix — before moving to the next task:**
+1. Append a completion note to `SCRATCHPAD.md` (gitignored — local only).
 2. Append your completed block to `HANDOFF.md`.
 3. Record any non-trivial decisions to `DECISIONS.md`.
 4. Commit and push: `git add HANDOFF.md DECISIONS.md && git commit -m "handoff: <agent> completed <task>" && git push`
+
+> **Why after each feature, not at session end?** Sessions in Claude Code have no clear end signal. Tying the ritual to each completed feature ensures it always happens. The pre-commit hook will warn if you commit code without updating HANDOFF.md today.
 
 ## Codebase Context
 

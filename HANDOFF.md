@@ -65,3 +65,41 @@
 - All 46 tests in `tests/test_install.sh` must continue to pass after any changes to `rig-stage` or adapter files
 - The B-001 fix (HANDOFF.md/DECISIONS.md preservation) is now an invariant — do not regress it
 - Commit F-006/F-007 work before starting F-001 (user approved, pending commit)
+
+---
+
+### Agent: Claude Sonnet 4.6
+**Completed:** 2026-03-19
+**Task:** F-001, F-002, F-003, MCP wiring, navigation rules, session protocol enforcement
+
+#### Output Files
+- `rig-stage` — added `substitute_placeholders()` (F-001), `cmd_list_targets()` (F-002), `cmd_update()` (F-003); fixed `cmd_upgrade` to call `update` not `install --force`; updated `usage()`; fixed `set -e` bug in `&&` patterns
+- `tests/test_install.sh` — 25 new tests (71 total); covers F-001 placeholder substitution, F-002 list-targets, F-003 update/preserve
+- `tests/lib.sh` — added `assert_not_contains` helper
+- `tests/fixtures/python-project/README.md` — new fixture for F-001 description detection
+- `targets/claude-code/settings.json.template` — added `mcpServers` block for ccindex serve
+- `targets/claude-code/CLAUDE.md.template` — expanded Codebase Context section (navigation priority, Grep/Glob table); rewrote session protocol trigger from "end of session" to "after each feature"
+- `.claude/settings.json` — added `mcpServers` (live project)
+- `CLAUDE.md` — same navigation + protocol updates (live project)
+- `hooks/pre-commit` — added handoff reminder warning when code staged without today's HANDOFF entry
+- `FEATURES.md` — marked B-001, F-001, F-002, F-003, F-006, F-007 as done
+
+#### Assumptions Made
+- `set -e` + `[[ ... ]] && cmd` was the root cause of TypeScript/C++ fixture install failures — confirmed by stash test
+- Session protocol "end of session" trigger is unenforceable in Claude Code — redesigned to per-feature-commit trigger
+- Pre-commit warning (not block) is appropriate for missing HANDOFF — blocking would frustrate mid-feature commits
+
+#### What Was Not Done
+- F-004 (OpenAI adapter), F-005 (Gemini adapter) — P3, deferred to v2.0/v3.0
+- F-008–F-016 (OpenSpec suite) — v1.2 milestone, not started
+- ccindex `init` still references `.claude/mcp.json` (wrong filename) — a separate prompt was written for the ccindex repo owner to fix
+
+#### Uncertainties
+- MCP server requires Claude Code restart to pick up the new `mcpServers` entry — not tested end-to-end
+- Pre-commit hook warning uses `date +%Y-%m-%d` — will fire in UTC offset edge cases around midnight
+
+#### Instructions for Next Agent
+- v1.1 backlog is fully cleared (B-001, F-001, F-002, F-003, F-006, F-007 all done)
+- Next milestone is v1.2: OpenSpec suite (F-008–F-016), starting with F-008 (openspec-init)
+- All 71 tests must continue to pass — run `bash tests/test_install.sh` before committing
+- **Follow the new session protocol**: after each feature commit, update SCRATCHPAD.md, HANDOFF.md, DECISIONS.md, then `git add HANDOFF.md DECISIONS.md && git commit -m "handoff: ..." && git push`

@@ -35,7 +35,7 @@ Concrete steps, files to change, and any known constraints.
 ### B-001 — `install` overwrites HANDOFF.md and DECISIONS.md, destroying session history
 
 **Type:** bug
-**Status:** planned
+**Status:** done
 **Priority:** P0
 **Target version:** v1.1
 **Source:** Spec §5.3 vs §12 contradiction; discovered 2026-03-18
@@ -95,7 +95,7 @@ Placeholders that cannot be auto-detected are left as-is so the user knows what 
 
 ### F-002 — `rig-stage list-targets` subcommand
 
-**Status:** planned
+**Status:** done
 **Priority:** P2
 **Target version:** v1.1
 **Source:** Spec §7.3
@@ -123,7 +123,7 @@ Available targets:
 
 ### F-003 — `rig-stage update` — refresh agents/skills without clobbering user config
 
-**Status:** planned
+**Status:** done
 **Priority:** P2
 **Target version:** v1.1
 **Source:** Spec §15 open questions
@@ -495,10 +495,10 @@ When multiple changes finish in the same sprint, archiving them one at a time is
 
 | ID | Type | Title | Status | Priority | Version |
 |---|---|---|---|---|---|
-| B-001 | bug | `install` overwrites HANDOFF.md and DECISIONS.md | planned | P0 | v1.1 |
+| B-001 | bug | `install` overwrites HANDOFF.md and DECISIONS.md | done | P0 | v1.1 |
 | F-001 | feature | Auto-populate CLAUDE.md placeholders | done | P1 | v1.1 |
-| F-002 | feature | `list-targets` subcommand | planned | P2 | v1.1 |
-| F-003 | feature | `update` command (agents/skills only) | planned | P2 | v1.1 |
+| F-002 | feature | `list-targets` subcommand | done | P2 | v1.1 |
+| F-003 | feature | `update` command (agents/skills only) | done | P2 | v1.1 |
 | F-004 | feature | OpenAI target adapter | planned | P3 | v2.0 |
 | F-005 | feature | Gemini CLI target adapter | planned | P3 | v3.0 |
 | F-006 | feature | Auto-load session files via `@file` imports | done | P0 | v1.1 |
