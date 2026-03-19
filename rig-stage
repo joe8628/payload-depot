@@ -204,7 +204,7 @@ cmd_update() {
 
   local skill_count=0
   if compgen -G "$RIG_DIR/skills/*.md" > /dev/null 2>&1; then
-    skill_count=$(find "$RIG_DIR/skills" -name "*.md" | wc -l | tr -d ' ')
+    skill_count=$(find "$RIG_DIR/skills" -name "*.md" ! -name "registry.md" | wc -l | tr -d ' ')
     cp "$RIG_DIR/skills/"*.md "$SKILL_INSTALL_PATH/"
   fi
   ok "Skills updated  → $SKILL_INSTALL_PATH ($skill_count files)"
@@ -231,7 +231,11 @@ cmd_list() {
   echo ""
   echo "Skills:"
   for f in "$RIG_DIR/skills/"*.md; do
-    [[ -f "$f" ]] && echo "  $(basename "$f" .md)"
+    [[ -f "$f" ]] || continue
+    local base
+    base="$(basename "$f" .md)"
+    [[ "$base" == "registry" ]] && continue
+    echo "  $base"
   done
 }
 
@@ -324,7 +328,7 @@ cmd_install() {
   # Step 5: Copy skills (always overwrite)
   local skill_count=0
   if compgen -G "$RIG_DIR/skills/*.md" > /dev/null 2>&1; then
-    skill_count=$(find "$RIG_DIR/skills" -name "*.md" | wc -l | tr -d ' ')
+    skill_count=$(find "$RIG_DIR/skills" -name "*.md" ! -name "registry.md" | wc -l | tr -d ' ')
   fi
   if $dry_run; then
     log "[dry-run] Copy skills/ → $SKILL_INSTALL_PATH ($skill_count files)"
