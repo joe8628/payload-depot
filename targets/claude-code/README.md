@@ -1,6 +1,6 @@
 # Claude Code Target
 
-Default Loadout Depot target. Installs agents to `.claude/agents/`, skills to `.claude/skills/`.
+Default Payload Depot target. Installs agents to `.claude/agents/`, skills to `.claude/skills/`.
 
 ## Requirements
 

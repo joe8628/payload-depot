@@ -1,3 +1,3 @@
 # test-project
 
-A test fixture for Loadout Depot install tests.
+A test fixture for Payload Depot install tests.

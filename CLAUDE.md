@@ -4,7 +4,7 @@
 @AGENTS.md
 @.claude/skills/registry.md
 
-# Loadout Depot
+# Payload Depot
 
 **Language/toolchain:** Bash + bats/bats-core
 **One-line description:** Bootstrap AI-assisted coding sessions with a single CLI command

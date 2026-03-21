@@ -68,7 +68,7 @@ The original plan (2026-03-19) proposed writing 8 SKILL.md files by hand for `op
 
 ## Correct Integration Strategy
 
-Loadout Depot's role is environment bootstrapping. For OpenSpec, that means:
+Payload Depot's role is environment bootstrapping. For OpenSpec, that means:
 
 ### Option A — Thin wrapper (recommended starting point)
 
@@ -81,29 +81,29 @@ Loadout Depot's role is environment bootstrapping. For OpenSpec, that means:
 
 ### Option B — Self-contained (no openspec CLI dependency)
 
-Bundle OpenSpec's skill templates directly into Loadout Depot (copy them from the OpenSpec repo as static files). Loadout Depot becomes responsible for keeping them current.
+Bundle OpenSpec's skill templates directly into Payload Depot (copy them from the OpenSpec repo as static files). Payload Depot becomes responsible for keeping them current.
 
 **Downside:** Becomes stale when OpenSpec releases new versions. More maintenance.
 
 ### Option C — Delegate entirely
 
-Document that users should run `openspec init --tools claude` themselves after `payload-depot install`. No Loadout Depot integration at all — just a note in the README.
+Document that users should run `openspec init --tools claude` themselves after `payload-depot install`. No Payload Depot integration at all — just a note in the README.
 
 ---
 
 ## Open Questions (must resolve before implementation)
 
-1. **Which option?** A, B, or C? Depends on how tightly Loadout Depot should be coupled to the OpenSpec CLI.
+1. **Which option?** A, B, or C? Depends on how tightly Payload Depot should be coupled to the OpenSpec CLI.
 
 2. **Dependency model:** If Option A — should `openspec` be a hard dependency (install fails without it) or soft (warn and skip)? The `ccindex` integration uses a soft-skip pattern — is that the right model here too?
 
 3. **Profile selection:** OpenSpec has two profiles — `core` (4 commands: propose, explore, apply, archive) and `custom` (full suite including ff, continue, verify, sync, bulk-archive, onboard). Which should `payload-depot openspec-init` configure by default?
 
-4. **Skill registration:** OpenSpec installs skills with names like `openspec-propose` (flat, with prefix). Loadout Depot's registry uses `category/name` (e.g., `openspec/propose`). Do we register them as-is under their OpenSpec names, or rename?
+4. **Skill registration:** OpenSpec installs skills with names like `openspec-propose` (flat, with prefix). Payload Depot's registry uses `category/name` (e.g., `openspec/propose`). Do we register them as-is under their OpenSpec names, or rename?
 
 5. **Skill-check compatibility:** OpenSpec manages its own skill files and can overwrite them with `openspec update`. Should `payload-depot-skill-check.sh` validate OpenSpec skills (and potentially conflict with OpenSpec's own validation), or explicitly exclude them?
 
-6. **config.yaml:** OpenSpec's `config.yaml` injects project context into all planning prompts. Should Loadout Depot pre-populate it with project metadata (name, language, description) after running `openspec init`? This would be analogous to F-001 (CLAUDE.md placeholder substitution).
+6. **config.yaml:** OpenSpec's `config.yaml` injects project context into all planning prompts. Should Payload Depot pre-populate it with project metadata (name, language, description) after running `openspec init`? This would be analogous to F-001 (CLAUDE.md placeholder substitution).
 
 7. **F-008 through F-016 scope:** Are all 9 features still relevant? Some (F-013 verify, F-014 ff, F-015 continue, F-016 bulk-archive) map to OpenSpec's expanded profile commands. Should they become registry entries pointing at OpenSpec-generated skills rather than hand-written SKILL.md files?
 

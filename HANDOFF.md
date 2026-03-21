@@ -314,3 +314,35 @@
 - When adding a skill: create `skills/<name>/SKILL.md` with all 5 frontmatter fields, add registry entry, re-run skill check
 - Next milestone: v1.2 OpenSpec suite (F-008–F-016), start with F-008 (openspec-init) per FEATURES.md
 - `base/clean-code` skill is now separate from the architecture skills it serves — if it gains parent skills in future, update `parent_skills` only (not `uses_skills`)
+
+---
+
+### Agent: Claude Sonnet 4.6
+**Completed:** 2026-03-21
+**Task:** Update README and all documentation with new name payload-depot
+
+#### Output Files
+- `README.md` — "Loadout Depot" → "Payload Depot" (heading + alt text)
+- `SPEC.md` — all occurrences replaced (20 → 0)
+- `FEATURES.md` — all occurrences replaced (10 → 0)
+- `CHANGELOG.md` — all occurrences replaced (1 → 0)
+- `CLAUDE.md` — title updated to "Payload Depot"
+- `targets/claude-code/README.md`, `targets/gemini/README.md`, `targets/openai/README.md` — descriptions updated
+- `tests/fixtures/python-project/README.md` — fixture description updated
+- `tests/test_install.sh` — 2 hardcoded expected strings updated to match new name
+- `docs/superpowers/plans/*.md` — all occurrences replaced
+
+#### Assumptions Made
+- HANDOFF.md and DECISIONS.md historical entries are left as-is (they record past state accurately)
+- `brief_Rig.md` is a historical brief and not updated
+
+#### What Was Not Done
+- Nothing deferred
+
+#### Uncertainties
+- None
+
+#### Instructions for Next Agent
+- Run `bash tests/test_install.sh && bash tests/test_skill_check.sh` before any changes (90 + 17 = 107 tests)
+- No "Loadout Depot" or "loadout-depot" remain in any active doc files
+- Next milestone: v1.2 OpenSpec suite (F-008–F-016), start with F-008 (openspec-init) per FEATURES.md

@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Loadout Depot will be documented here.
+All notable changes to Payload Depot will be documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 Versioning: [Semantic Versioning](https://semver.org/)
 

@@ -21,7 +21,7 @@
 | Modify | `targets/claude-code/CLAUDE.md.template` | Add `@.claude/skills/registry.md` import + Skills section |
 | Modify | `targets/claude-code/adapter.sh` | Install payload-depot-skill-check.sh in `adapter_post_install` |
 | Modify | `targets/claude-code/payload-depot-health-check.sh` | Replace skill count check with call to payload-depot-skill-check.sh |
-| Update | `.claude/skills/registry.md` | Live copy of registry for the Loadout Depot repo itself |
+| Update | `.claude/skills/registry.md` | Live copy of registry for the Payload Depot repo itself |
 | Update | `.claude/hooks/payload-depot-health-check.sh` | Live copy (mirrors targets/) |
 | Update | `CLAUDE.md` | Live copy (add @import + Skills section) |
 
@@ -962,7 +962,7 @@ To add a skill:
 3. Add an entry to `.claude/skills/registry.md` following the existing format
 ```
 
-- [ ] **Step 5: Run the full skill check against the live Loadout Depot install**
+- [ ] **Step 5: Run the full skill check against the live Payload Depot install**
 
 ```bash
 bash .claude/hooks/payload-depot-skill-check.sh

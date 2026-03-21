@@ -1,4 +1,4 @@
-# Loadout Depot — Pending Features & Bugs
+# Payload Depot — Pending Features & Bugs
 
 > Structured backlog of planned functionality and confirmed bugs.
 > Status values: `planned` | `in-progress` | `done`.
@@ -129,10 +129,10 @@ Available targets:
 **Source:** Spec §15 open questions
 
 #### Problem
-`payload-depot upgrade` pulls the latest Loadout Depot source and then calls `install --force`, which overwrites user-edited config files (`CLAUDE.md`, `CONVENTIONS.md`, `AGENTS.md`, `settings.json`). There is no way to pull updated agent and skill prompts without risking loss of project-specific customisations.
+`payload-depot upgrade` pulls the latest Payload Depot source and then calls `install --force`, which overwrites user-edited config files (`CLAUDE.md`, `CONVENTIONS.md`, `AGENTS.md`, `settings.json`). There is no way to pull updated agent and skill prompts without risking loss of project-specific customisations.
 
 #### Expected behaviour
-`payload-depot update` refreshes only the files that Loadout Depot owns and versions (agent `.md` files, skill `.md` files) while leaving all config files untouched regardless of `--force`.
+`payload-depot update` refreshes only the files that Payload Depot owns and versions (agent `.md` files, skill `.md` files) while leaving all config files untouched regardless of `--force`.
 
 ```
 [payload-depot] Updating agents and skills only (config files preserved)...
@@ -144,7 +144,7 @@ Available targets:
 #### Implementation notes
 - Add `cmd_update()` in `payload-depot` that runs steps 4–5 of the install sequence (copy agents and skills) but skips step 6 (config templates) unconditionally.
 - Accepts `--target` flag; defaults to `claude-code`.
-- `payload-depot upgrade` should call `update` instead of `install --force` so that pulling a new Loadout Depot version does not destroy user config.
+- `payload-depot upgrade` should call `update` instead of `install --force` so that pulling a new Payload Depot version does not destroy user config.
 
 ---
 
@@ -250,7 +250,7 @@ On session start (before the user's first prompt is processed), a hook:
 **Target version:** v1.3
 **Source:** https://github.com/Fission-AI/OpenSpec — reviewed 2026-03-20
 
-> ⚠️ **Implementation approach revised.** Original plan assumed Loadout Depot would scaffold the `openspec/` tree itself. After reviewing Fission-AI's docs, the OpenSpec CLI (`@fission-ai/openspec`) already handles this via `openspec init --tools claude`. Loadout Depot's role is a thin wrapper, not a reimplementation.
+> ⚠️ **Implementation approach revised.** Original plan assumed Payload Depot would scaffold the `openspec/` tree itself. After reviewing Fission-AI's docs, the OpenSpec CLI (`@fission-ai/openspec`) already handles this via `openspec init --tools claude`. Payload Depot's role is a thin wrapper, not a reimplementation.
 
 #### Problem
 After `payload-depot install`, users have no automated path to set up OpenSpec in their project. They must manually install the `openspec` CLI and run `openspec init --tools claude` themselves.
@@ -278,7 +278,7 @@ After `payload-depot install`, users have no automated path to set up OpenSpec i
 **Target version:** v1.3
 **Source:** https://github.com/Fission-AI/OpenSpec/blob/main/docs/supported-tools.md — reviewed 2026-03-20
 
-> ⚠️ **Implementation approach revised.** Original plan assumed Loadout Depot would write these skills from scratch. After reviewing Fission-AI's docs, `openspec init --tools claude` generates all `/opsx:*` skills automatically into `.claude/skills/openspec-*/SKILL.md`. Loadout Depot should register them, not rewrite them.
+> ⚠️ **Implementation approach revised.** Original plan assumed Payload Depot would write these skills from scratch. After reviewing Fission-AI's docs, `openspec init --tools claude` generates all `/opsx:*` skills automatically into `.claude/skills/openspec-*/SKILL.md`. Payload Depot should register them, not rewrite them.
 
 #### Problem
 After `openspec init --tools claude` runs, it installs skills like `.claude/skills/openspec-propose/SKILL.md`. The `payload-depot-skill-check.sh` validator flags these as "unregistered" because they don't appear in `skills/registry.md`.
@@ -305,14 +305,14 @@ After `openspec init --tools claude` runs, it installs skills like `.claude/skil
 > ⚠️ **Implementation approach revised.** F-010 through F-016 were originally individual skills to write by hand. All are now collapsed into this single integration feature.
 
 #### Problem
-`openspec update` refreshes the Claude Code skills after OpenSpec CLI upgrades. Users who run `payload-depot update` to refresh their Loadout Depot skills will not automatically get updated OpenSpec skills.
+`openspec update` refreshes the Claude Code skills after OpenSpec CLI upgrades. Users who run `payload-depot update` to refresh their Payload Depot skills will not automatically get updated OpenSpec skills.
 
 #### Expected behaviour
-`payload-depot update` calls `openspec update` if the `openspec` CLI is installed, so OpenSpec skills stay current alongside Loadout Depot skills.
+`payload-depot update` calls `openspec update` if the `openspec` CLI is installed, so OpenSpec skills stay current alongside Payload Depot skills.
 
 #### Implementation notes
 - Soft: skip silently if `openspec` is not installed.
-- Run after the Loadout Depot skill copy step, not before.
+- Run after the Payload Depot skill copy step, not before.
 
 ---
 
@@ -337,7 +337,7 @@ The `env-setup` skill includes an **Optional: OpenSpec** section documenting the
 
 ---
 
-> **F-012 through F-016 retired.** The original features (opsx-archive, opsx-verify, opsx-ff, opsx-continue, opsx-bulk-archive as hand-written skills) are superseded by the OpenSpec CLI and its generated skills. All functionality is provided by `openspec archive`, `openspec validate`, and the `/opsx:*` commands installed by `openspec init`. No Loadout Depot skills need to be written for these.
+> **F-012 through F-016 retired.** The original features (opsx-archive, opsx-verify, opsx-ff, opsx-continue, opsx-bulk-archive as hand-written skills) are superseded by the OpenSpec CLI and its generated skills. All functionality is provided by `openspec archive`, `openspec validate`, and the `/opsx:*` commands installed by `openspec init`. No Payload Depot skills need to be written for these.
 
 ---
 

@@ -253,7 +253,7 @@ echo ""
 echo "-- placeholder-description-readme (F-001) --"
 dir=$(setup_fixture python-project)
 (cd "$dir" && "$PAYLOAD_DEPOT_DIR/payload-depot" install --no-codebase-index 2>&1) || true
-assert_contains "description from README.md" "A test fixture for Loadout Depot install tests." "$(cat "$dir/CLAUDE.md")"
+assert_contains "description from README.md" "A test fixture for Payload Depot install tests." "$(cat "$dir/CLAUDE.md")"
 assert_not_contains "description placeholder gone" "<what this project does>" "$(cat "$dir/CLAUDE.md")"
 cleanup "$dir"
 
@@ -282,7 +282,7 @@ echo ""
 echo "-- list-targets-shows-claude-code (F-002) --"
 output=$("$PAYLOAD_DEPOT_DIR/payload-depot" list-targets 2>&1)
 assert_contains "claude-code listed"          "claude-code"       "$output"
-assert_contains "claude-code has description" "Default Loadout Depot target" "$output"
+assert_contains "claude-code has description" "Default Payload Depot target" "$output"
 
 # 26. F-002: list-targets omits stubs without adapter.sh
 echo ""

@@ -1,7 +1,7 @@
 <div align="center">
-  <img src="payload-depot.png" alt="Loadout Depot" width="600"/>
+  <img src="payload-depot.png" alt="Payload Depot" width="600"/>
 
-  <h1>Loadout Depot</h1>
+  <h1>Payload Depot</h1>
   <p>Bootstrap any project with Claude Code agents, skills, session templates, and a codebase context index — in a single command.</p>
 
   ![Version](https://img.shields.io/badge/version-1.1.0-blue)

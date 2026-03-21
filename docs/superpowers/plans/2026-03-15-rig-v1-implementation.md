@@ -1,4 +1,4 @@
-# Loadout Depot v1.0 Implementation Plan
+# Payload Depot v1.0 Implementation Plan
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -45,7 +45,7 @@ git submodule update --init --recursive
 - [ ] **Step 3: Write `.gitignore`**
 
 ```
-# Loadout Depot session files — ephemeral, not committed
+# Payload Depot session files — ephemeral, not committed
 SCRATCHPAD.md
 
 # Codebase context — local vector DB, not committed
@@ -58,7 +58,7 @@ SCRATCHPAD.md
 - [ ] **Step 4: Write `README.md` stub**
 
 ```markdown
-# Loadout Depot
+# Payload Depot
 
 CLI scaffold that bootstraps any project with Claude Code agents, skills, session
 templates, and a codebase context index.
@@ -77,7 +77,7 @@ See `SPEC.md` for full documentation.
 ```markdown
 # Changelog
 
-All notable changes to Loadout Depot will be documented here.
+All notable changes to Payload Depot will be documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
@@ -89,7 +89,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 ```markdown
 # Claude Code Target
 
-Default Loadout Depot target. Installs agents to `.claude/agents/`, skills to `.claude/skills/`.
+Default Payload Depot target. Installs agents to `.claude/agents/`, skills to `.claude/skills/`.
 Requires the `claude` CLI to be installed.
 ```
 
@@ -133,7 +133,7 @@ git commit -m "chore: initialize repo structure and codebase-context submodule"
 
 ```bash
 #!/usr/bin/env bash
-# Minimal test assertion library for Loadout Depot tests
+# Minimal test assertion library for Payload Depot tests
 
 PASS=0
 FAIL=0
@@ -274,7 +274,7 @@ Usage: rig <command> [options]
 Commands:
   install   Bootstrap the current directory as an AI-assisted project
   list      List available agents and skills
-  version   Print Loadout Depot version
+  version   Print Payload Depot version
   help      Print this message
 
 Options for install:
@@ -420,7 +420,7 @@ cmd_install() {
   local gitignore_block
   gitignore_block="$(cat <<'EOF'
 
-# Loadout Depot session files — ephemeral, not committed
+# Payload Depot session files — ephemeral, not committed
 SCRATCHPAD.md
 
 # Codebase context — local vector DB, not committed
@@ -429,7 +429,7 @@ EOF
 )"
   if $dry_run; then
     log "[dry-run] Append .gitignore entries"
-  elif ! grep -qF "Loadout Depot session files" .gitignore 2>/dev/null; then
+  elif ! grep -qF "Payload Depot session files" .gitignore 2>/dev/null; then
     echo "$gitignore_block" >> .gitignore
     ok ".gitignore           → updated"
   fi
@@ -985,7 +985,7 @@ EOF
 touch agents/.gitkeep skills/.gitkeep
 cat > hooks/pre-commit <<'EOF'
 #!/usr/bin/env bash
-# Loadout Depot pre-commit hook — stub (implemented in Phase 7)
+# Payload Depot pre-commit hook — stub (implemented in Phase 7)
 exit 0
 EOF
 chmod +x hooks/pre-commit
@@ -1256,7 +1256,7 @@ bash tests/test_hooks.sh
 
 ```bash
 #!/usr/bin/env bash
-# Loadout Depot pre-commit hook
+# Payload Depot pre-commit hook
 # Detects project language and runs linting + type-checking.
 # Blocks commit on failure. Skips gracefully if tools are missing.
 
@@ -1500,7 +1500,7 @@ All tests must pass before this step is complete.
 
 ```bash
 git add skills/ agents/
-git commit -m "feat: add remaining skills and prompt versioning headers — Loadout Depot v1.0 complete"
+git commit -m "feat: add remaining skills and prompt versioning headers — Payload Depot v1.0 complete"
 ```
 
 ---

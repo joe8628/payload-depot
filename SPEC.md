@@ -1,4 +1,4 @@
-# Loadout Depot — Project Specification
+# Payload Depot — Project Specification
 
 **Version:** 1.0.0
 **Status:** Draft
@@ -8,11 +8,11 @@
 
 ## 1. Overview
 
-Loadout Depot is a CLI tool and scaffold repository. Running `payload-depot install` in any project root copies a predefined set of AI agent prompts, skill prompts, session templates, config files, and git hooks into the correct locations for the target LLM tool. It then invokes the context manager installer.
+Payload Depot is a CLI tool and scaffold repository. Running `payload-depot install` in any project root copies a predefined set of AI agent prompts, skill prompts, session templates, config files, and git hooks into the correct locations for the target LLM tool. It then invokes the context manager installer.
 
 The system has two layers:
 
-- **Canonical content layer** — agent and skill `.md` files that are LLM-agnostic and live once in the Loadout Depot repo
+- **Canonical content layer** — agent and skill `.md` files that are LLM-agnostic and live once in the Payload Depot repo
 - **Target adapter layer** — per-tool wiring that maps canonical content to the right install paths, config formats, and invocation conventions
 
 This spec covers the v1.0 Claude Code target. Future targets (OpenAI, Gemini) follow the same adapter contract defined in Section 7.
@@ -21,13 +21,13 @@ This spec covers the v1.0 Claude Code target. Future targets (OpenAI, Gemini) fo
 
 ## 2. Constraints and Assumptions
 
-- Loadout Depot is a developer tool. The user is a technical operator running it from a terminal.
+- Payload Depot is a developer tool. The user is a technical operator running it from a terminal.
 - The `rig` entrypoint is a single bash script for v1.0. No runtime dependencies beyond bash, git, and standard Unix utilities (`cp`, `chmod`, `mkdir`, `cat`).
 - The target project must have a git repository initialised (`.git/` must exist) before running `payload-depot install`.
-- Context manager is a pre-existing external component. Loadout Depot invokes it but does not own it.
+- Context manager is a pre-existing external component. Payload Depot invokes it but does not own it.
 - All agent and skill files are UTF-8 plain text markdown.
 - v1.0 supports Python, TypeScript, and C/C++ projects.
-- Loadout Depot does not require network access to install.
+- Payload Depot does not require network access to install.
 
 ---
 
@@ -102,7 +102,7 @@ rig/
 
 ### 4.1 Entrypoint
 
-`rig` is a bash script located at the repo root, made executable with `chmod +x`. It is designed to be invoked from the target project root, with the path to the Loadout Depot repo either in `$PATH` or referenced directly.
+`rig` is a bash script located at the repo root, made executable with `chmod +x`. It is designed to be invoked from the target project root, with the path to the Payload Depot repo either in `$PATH` or referenced directly.
 
 ```bash
 # Invocation patterns
@@ -133,7 +133,7 @@ Prints all available agents and skills with their descriptions. No flags.
 
 #### `payload-depot version`
 
-Prints the current Loadout Depot version.
+Prints the current Payload Depot version.
 
 #### `payload-depot help`
 
@@ -215,7 +215,7 @@ Steps execute in order. Failure in any step (except context manager) halts execu
 | `settings.json` | Skip if exists | Overwrite |
 | Session templates | Always overwrite | Always overwrite |
 
-Rationale: agent and skill files are versioned prompt content owned by Loadout Depot. Config files are user-customised per project and must not be clobbered silently.
+Rationale: agent and skill files are versioned prompt content owned by Payload Depot. Config files are user-customised per project and must not be clobbered silently.
 
 ---
 
@@ -687,7 +687,7 @@ To add support for a new LLM tool:
 
 ## 8. Codebase Context MCP Integration
 
-The codebase context MCP is an external component providing shared codebase knowledge across agents. Storage is ChromaDB (PersistentClient) at `.codebase-context/chroma/`. Loadout Depot does not own or modify it.
+The codebase context MCP is an external component providing shared codebase knowledge across agents. Storage is ChromaDB (PersistentClient) at `.codebase-context/chroma/`. Payload Depot does not own or modify it.
 
 ### 8.1 What It Provides
 
@@ -701,17 +701,17 @@ The repo map is also injected into every session via `CLAUDE.md` using `@.codeba
 
 ### 8.2 Invocation
 
-During `payload-depot install`, after all file copies and hook installation, Loadout Depot invokes:
+During `payload-depot install`, after all file copies and hook installation, Payload Depot invokes:
 
 ```bash
 ccindex init
 ```
 
-If this command is not found or exits non-zero, Loadout Depot prints an error and exits with code 4. The `--no-codebase-index` flag skips this step entirely.
+If this command is not found or exits non-zero, Payload Depot prints an error and exits with code 4. The `--no-codebase-index` flag skips this step entirely.
 
 ### 8.3 Gitignore
 
-The ChromaDB directory is local and must not be committed. Loadout Depot appends this entry during install:
+The ChromaDB directory is local and must not be committed. Payload Depot appends this entry during install:
 
 ```
 .codebase-context/chroma/
@@ -719,7 +719,7 @@ The ChromaDB directory is local and must not be committed. Loadout Depot appends
 
 ### 8.4 Contract
 
-Loadout Depot requires only that `ccindex init` is available on `$PATH` and exits 0 on success.
+Payload Depot requires only that `ccindex init` is available on `$PATH` and exits 0 on success.
 
 ---
 
@@ -744,7 +744,7 @@ changelog:
 | New output field, new process step, extended scope | Minor | 1.0.0 → 1.1.0 |
 | Changed role definition, removed output, new required input | Major | 1.0.0 → 2.0.0 |
 
-**Loadout Depot version vs prompt versions:** Loadout Depot carries its own semver in `rig --version`. Prompt versions are independent. A single Loadout Depot release may contain prompts at different versions.
+**Payload Depot version vs prompt versions:** Payload Depot carries its own semver in `rig --version`. Prompt versions are independent. A single Payload Depot release may contain prompts at different versions.
 
 ---
 
@@ -859,7 +859,7 @@ The hook prints directly to the terminal. Format:
 The following entries must be added to the project's `.gitignore` during install (appended, not overwritten):
 
 ```
-# Loadout Depot session files — ephemeral, not committed
+# Payload Depot session files — ephemeral, not committed
 SCRATCHPAD.md
 
 # Codebase context — local vector DB, not committed
@@ -916,8 +916,8 @@ Every agent, before ending a session, must:
 
 | File | Format | Owner | Committed |
 |---|---|---|---|
-| `agents/*.md` | Markdown with YAML front matter | Loadout Depot | Yes (in Loadout Depot repo) |
-| `skills/*.md` | Markdown with YAML front matter | Loadout Depot | Yes (in Loadout Depot repo) |
+| `agents/*.md` | Markdown with YAML front matter | Payload Depot | Yes (in Payload Depot repo) |
+| `skills/*.md` | Markdown with YAML front matter | Payload Depot | Yes (in Payload Depot repo) |
 | `CLAUDE.md` | Markdown | User (from template) | Yes |
 | `CONVENTIONS.md` | Markdown | User (from template) | Yes |
 | `AGENTS.md` | Markdown | User (from template) | Yes |
@@ -930,8 +930,8 @@ Every agent, before ending a session, must:
 | `docs/decisions/*.md` | Markdown | adr skill | Yes |
 | `CHANGELOG.md` | Markdown (Keep a Changelog) | changelog skill | Yes |
 | `.env.example` | dotenv | env-setup skill | Yes |
-| `.claude/skills/registry.md` | Markdown (heading-per-skill) | Loadout Depot | Yes |
-| `skill-smoke-test.md` | Markdown prompt | Loadout Depot | Yes (in Loadout Depot repo) |
+| `.claude/skills/registry.md` | Markdown (heading-per-skill) | Payload Depot | Yes |
+| `skill-smoke-test.md` | Markdown prompt | Payload Depot | Yes (in Payload Depot repo) |
 
 ---
 
