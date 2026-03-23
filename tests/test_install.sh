@@ -653,4 +653,106 @@ output=$(echo "$input" | bash "$dir/.claude/hooks/post-bash-test.sh" 2>&1)
 assert_contains "test-summary parses bats format" "passed" "$output"
 cleanup "$dir"
 
+
+# ── Context monitor hook ───────────────────────────────────────────────────────
+
+echo ""
+echo "-- context-monitor-installed --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$PAYLOAD_DEPOT_DIR/payload-depot" install --no-codebase-index 2>&1) || true
+assert_file_exists "context-monitor.sh installed" "$dir/.claude/hooks/context-monitor.sh"
+assert_contains    "context-monitor.sh executable" "x" \
+  "$(test -x "$dir/.claude/hooks/context-monitor.sh" && echo x || echo '')"
+cleanup "$dir"
+
+echo ""
+echo "-- context-monitor-wired-in-settings --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$PAYLOAD_DEPOT_DIR/payload-depot" install --no-codebase-index 2>&1) || true
+settings=$(cat "$dir/.claude/settings.json")
+assert_contains "settings.json references context-monitor" "context-monitor.sh" "$settings"
+cleanup "$dir"
+
+echo ""
+echo "-- context-monitor-goal-command-installed --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$PAYLOAD_DEPOT_DIR/payload-depot" install --no-codebase-index 2>&1) || true
+assert_file_exists "goal.md command installed" "$dir/.claude/commands/goal.md"
+cleanup "$dir"
+
+echo ""
+echo "-- context-monitor-silent-below-threshold --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$PAYLOAD_DEPOT_DIR/payload-depot" install --no-codebase-index 2>&1) || true
+# Small transcript (well below 70%)
+transcript=$(mktemp)
+printf '{"role":"user","content":"hello"}' > "$transcript"
+input="{\"session_id\":\"test\",\"transcript_path\":\"${transcript}\"}"
+stderr_out=$(echo "$input" | bash "$dir/.claude/hooks/context-monitor.sh" 2>&1 >/dev/null)
+assert_eq "context-monitor silent below threshold" "" "$stderr_out"
+rm -f "$transcript"
+cleanup "$dir"
+
+echo ""
+echo "-- context-monitor-warns-at-70pct --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$PAYLOAD_DEPOT_DIR/payload-depot" install --no-codebase-index 2>&1) || true
+# Generate transcript large enough to hit 70%:
+# pct = ((chars/4 + 20000) * 100) / 200000 >= 70
+# chars/4 >= 120000  =>  chars >= 480000
+transcript=$(mktemp)
+python3 -c "print('x' * 500000)" > "$transcript"
+input="{\"session_id\":\"test\",\"transcript_path\":\"${transcript}\"}"
+stderr_out=$(echo "$input" | bash "$dir/.claude/hooks/context-monitor.sh" 2>&1 >/dev/null)
+assert_contains "context-monitor emits WARN at 70%"   "WARN"    "$stderr_out"
+assert_contains "context-monitor shows token estimate" "tokens"  "$stderr_out"
+rm -f "$transcript"
+cleanup "$dir"
+
+echo ""
+echo "-- context-monitor-critical-at-90pct --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$PAYLOAD_DEPOT_DIR/payload-depot" install --no-codebase-index 2>&1) || true
+# chars >= 640000 for 90%
+transcript=$(mktemp)
+python3 -c "print('x' * 660000)" > "$transcript"
+input="{\"session_id\":\"test\",\"transcript_path\":\"${transcript}\"}"
+stderr_out=$(echo "$input" | bash "$dir/.claude/hooks/context-monitor.sh" 2>&1 >/dev/null)
+stdout_out=$(echo "$input" | bash "$dir/.claude/hooks/context-monitor.sh" 2>/dev/null)
+assert_contains "context-monitor CRITICAL in stderr"     "CRITICAL"  "$stderr_out"
+assert_contains "context-monitor stdout injection"       "CONTEXT MONITOR" "$stdout_out"
+assert_contains "context-monitor advises /clear"         "/clear"    "$stderr_out"
+rm -f "$transcript"
+cleanup "$dir"
+
+echo ""
+echo "-- context-monitor-shows-session-goal --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$PAYLOAD_DEPOT_DIR/payload-depot" install --no-codebase-index 2>&1) || true
+echo "Migrate auth middleware to v2" > "$dir/.claude/session-goal.txt"
+transcript=$(mktemp)
+python3 -c "print('x' * 500000)" > "$transcript"
+input="{\"session_id\":\"test\",\"transcript_path\":\"${transcript}\"}"
+stderr_out=$(echo "$input" | (cd "$dir" && bash ".claude/hooks/context-monitor.sh") 2>&1 >/dev/null)
+assert_contains "context-monitor shows goal" "Migrate auth middleware" "$stderr_out"
+rm -f "$transcript"
+cleanup "$dir"
+
+echo ""
+echo "-- context-monitor-graceful-no-transcript --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$PAYLOAD_DEPOT_DIR/payload-depot" install --no-codebase-index 2>&1) || true
+input='{"session_id":"test","transcript_path":"/nonexistent/transcript.jsonl"}'
+exit_code=0
+echo "$input" | bash "$dir/.claude/hooks/context-monitor.sh" 2>&1 || exit_code=$?
+assert_eq "context-monitor exits 0 on missing transcript" "0" "$exit_code"
+cleanup "$dir"
+
+echo ""
+echo "-- session-goal-gitignored --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$PAYLOAD_DEPOT_DIR/payload-depot" install --no-codebase-index 2>&1) || true
+assert_contains "session-goal.txt in .gitignore" "session-goal.txt" "$(cat "$dir/.gitignore")"
+cleanup "$dir"
+
 report

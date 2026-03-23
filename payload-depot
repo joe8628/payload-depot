@@ -103,6 +103,7 @@ _ensure_gitignore_entries() {
 # Loadout Depot session files — ephemeral, not committed
 SCRATCHPAD.md
 .payload-depot-verified
+.claude/session-goal.txt
 
 # Codebase context — local vector DB, not committed
 .codebase-context/chroma/
@@ -116,6 +117,10 @@ GITIGNORE
     fi
     if ! grep -qF ".codebase-context/chroma/" .gitignore 2>/dev/null; then
       printf '\n.codebase-context/chroma/\n' >> .gitignore
+      updated=true
+    fi
+    if ! grep -qF "session-goal.txt" .gitignore 2>/dev/null; then
+      printf '\n.claude/session-goal.txt\n' >> .gitignore
       updated=true
     fi
   fi
