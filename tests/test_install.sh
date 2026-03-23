@@ -453,4 +453,204 @@ dir=$(setup_fixture python-project)
 assert_dir_exists     "--openspec flag creates tree"        "$dir/openspec/specs"
 cleanup "$dir"
 
+# ── agent-check validator ─────────────────────────────────────────────────────
+
+echo ""
+echo "-- agent-check-installed --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$PAYLOAD_DEPOT_DIR/payload-depot" install --no-codebase-index 2>&1) || true
+assert_file_exists "payload-depot-agent-check.sh installed" "$dir/.claude/hooks/payload-depot-agent-check.sh"
+assert_contains    "payload-depot-agent-check.sh executable" "x" \
+  "$(test -x "$dir/.claude/hooks/payload-depot-agent-check.sh" && echo x || echo '')"
+cleanup "$dir"
+
+echo ""
+echo "-- agent-check-agents-present --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$PAYLOAD_DEPOT_DIR/payload-depot" install --no-codebase-index 2>&1) || true
+assert_file_exists "architect.md installed"       "$dir/.claude/agents/architect.md"
+assert_file_exists "code-writer.md installed"     "$dir/.claude/agents/code-writer.md"
+assert_file_exists "refactor.md installed"        "$dir/.claude/agents/refactor.md"
+assert_file_exists "release-manager.md installed" "$dir/.claude/agents/release-manager.md"
+cleanup "$dir"
+
+echo ""
+echo "-- agent-check-passes-fresh-install --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$PAYLOAD_DEPOT_DIR/payload-depot" install --no-codebase-index 2>&1) || true
+ac_output=$(cd "$dir" && bash ".claude/hooks/payload-depot-agent-check.sh" 2>&1)
+assert_contains "agent-check passes"          "0 failed"    "$ac_output"
+assert_contains "agent-check all passed msg"  "All checks passed" "$ac_output"
+cleanup "$dir"
+
+echo ""
+echo "-- agent-check-fails-missing-frontmatter --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$PAYLOAD_DEPOT_DIR/payload-depot" install --no-codebase-index 2>&1) || true
+# Overwrite one agent with frontmatter block that is missing required fields
+printf -- "---\nversion: 1.0.0\n---\n\n## Role\nBad.\n\n## Process\n1. Do stuff.\n\n## Do Not\n- Nothing.\n" \
+  > "$dir/.claude/agents/architect.md"
+ac_output=$(cd "$dir" && bash ".claude/hooks/payload-depot-agent-check.sh" 2>&1) || true
+assert_contains "agent-check detects missing name"        "missing 'name' field"        "$ac_output"
+assert_contains "agent-check detects missing description" "missing 'description' field" "$ac_output"
+assert_contains "agent-check detects missing tools"       "missing 'tools' field"       "$ac_output"
+cleanup "$dir"
+
+echo ""
+echo "-- agent-check-fails-missing-sections --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$PAYLOAD_DEPOT_DIR/payload-depot" install --no-codebase-index 2>&1) || true
+# Overwrite one agent with valid frontmatter but missing required sections
+printf -- "---\nname: test\ndescription: test agent\ntools: Read\nmodel: haiku\n---\n\n## Role\nTest.\n" \
+  > "$dir/.claude/agents/architect.md"
+ac_output=$(cd "$dir" && bash ".claude/hooks/payload-depot-agent-check.sh" 2>&1) || true
+assert_contains "agent-check detects missing Process"  "missing '## Process' section"  "$ac_output"
+assert_contains "agent-check detects missing Do Not"   "missing '## Do Not' section"   "$ac_output"
+cleanup "$dir"
+
+
+# ── Quality hooks (post-edit-lint, pre-write-secret-scan, post-bash-test) ─────
+
+echo ""
+echo "-- quality-hooks-installed --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$PAYLOAD_DEPOT_DIR/payload-depot" install --no-codebase-index 2>&1) || true
+assert_file_exists "post-edit-lint.sh installed"        "$dir/.claude/hooks/post-edit-lint.sh"
+assert_file_exists "pre-write-secret-scan.sh installed" "$dir/.claude/hooks/pre-write-secret-scan.sh"
+assert_file_exists "post-bash-test.sh installed"        "$dir/.claude/hooks/post-bash-test.sh"
+assert_contains    "post-edit-lint.sh executable"       "x" \
+  "$(test -x "$dir/.claude/hooks/post-edit-lint.sh" && echo x || echo '')"
+assert_contains    "pre-write-secret-scan.sh executable" "x" \
+  "$(test -x "$dir/.claude/hooks/pre-write-secret-scan.sh" && echo x || echo '')"
+assert_contains    "post-bash-test.sh executable"       "x" \
+  "$(test -x "$dir/.claude/hooks/post-bash-test.sh" && echo x || echo '')"
+cleanup "$dir"
+
+echo ""
+echo "-- quality-hooks-wired-in-settings --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$PAYLOAD_DEPOT_DIR/payload-depot" install --no-codebase-index 2>&1) || true
+settings=$(cat "$dir/.claude/settings.json")
+assert_contains "settings.json has PreToolUse"            "PreToolUse"            "$settings"
+assert_contains "settings.json has PostToolUse"           "PostToolUse"           "$settings"
+assert_contains "settings.json references secret-scan"    "pre-write-secret-scan" "$settings"
+assert_contains "settings.json references post-edit-lint" "post-edit-lint"        "$settings"
+assert_contains "settings.json references post-bash-test" "post-bash-test"        "$settings"
+cleanup "$dir"
+
+echo ""
+echo "-- post-edit-lint-clean-file --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$PAYLOAD_DEPOT_DIR/payload-depot" install --no-codebase-index 2>&1) || true
+echo "x = 1" > "$dir/sample.py"
+input=$(printf '{"tool_name":"Write","tool_input":{"file_path":"%s/sample.py"}}' "$dir")
+exit_code=0
+output=$(echo "$input" | bash "$dir/.claude/hooks/post-edit-lint.sh" 2>&1) || exit_code=$?
+assert_eq "post-edit-lint exits 0 on clean file" "0" "$exit_code"
+cleanup "$dir"
+
+echo ""
+echo "-- post-edit-lint-unknown-extension --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$PAYLOAD_DEPOT_DIR/payload-depot" install --no-codebase-index 2>&1) || true
+echo "hello" > "$dir/file.md"
+input=$(printf '{"tool_name":"Write","tool_input":{"file_path":"%s/file.md"}}' "$dir")
+exit_code=0
+echo "$input" | bash "$dir/.claude/hooks/post-edit-lint.sh" 2>&1 || exit_code=$?
+assert_eq "post-edit-lint exits 0 on unknown extension" "0" "$exit_code"
+cleanup "$dir"
+
+echo ""
+echo "-- post-edit-lint-missing-file --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$PAYLOAD_DEPOT_DIR/payload-depot" install --no-codebase-index 2>&1) || true
+input=$(printf '{"tool_name":"Write","tool_input":{"file_path":"%s/nonexistent.py"}}' "$dir")
+exit_code=0
+echo "$input" | bash "$dir/.claude/hooks/post-edit-lint.sh" 2>&1 || exit_code=$?
+assert_eq "post-edit-lint exits 0 on missing file" "0" "$exit_code"
+cleanup "$dir"
+
+echo ""
+echo "-- pre-write-secret-scan-clean --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$PAYLOAD_DEPOT_DIR/payload-depot" install --no-codebase-index 2>&1) || true
+input='{"tool_name":"Write","tool_input":{"file_path":"sample.py","content":"x = 1\n"}}'
+exit_code=0
+echo "$input" | bash "$dir/.claude/hooks/pre-write-secret-scan.sh" 2>&1 || exit_code=$?
+assert_eq "secret-scan exits 0 on clean content" "0" "$exit_code"
+cleanup "$dir"
+
+echo ""
+echo "-- pre-write-secret-scan-blocks-aws-key --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$PAYLOAD_DEPOT_DIR/payload-depot" install --no-codebase-index 2>&1) || true
+# Construct a fake AWS key ID at runtime so the hook script source doesn't match itself
+fake_aws="AKIA"
+fake_aws+="IOSFODNN7EXAMPLE"
+input="{\"tool_name\":\"Write\",\"tool_input\":{\"file_path\":\"config.py\",\"content\":\"key = \\\"${fake_aws}\\\"\"}}"
+exit_code=0
+output=$(echo "$input" | bash "$dir/.claude/hooks/pre-write-secret-scan.sh" 2>&1) || exit_code=$?
+assert_eq        "secret-scan blocks AWS key (exit 2)"  "2"              "$exit_code"
+assert_contains  "secret-scan names the pattern"        "AWS access key" "$output"
+assert_contains  "secret-scan gives remediation hint"   "environment variable" "$output"
+cleanup "$dir"
+
+echo ""
+echo "-- pre-write-secret-scan-blocks-pem-key --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$PAYLOAD_DEPOT_DIR/payload-depot" install --no-codebase-index 2>&1) || true
+pem_header="-----BEGIN RSA PRIVATE KEY-----"
+input="{\"tool_name\":\"Edit\",\"tool_input\":{\"file_path\":\"keys.txt\",\"old_string\":\"\",\"new_string\":\"${pem_header}\"}}"
+exit_code=0
+output=$(echo "$input" | bash "$dir/.claude/hooks/pre-write-secret-scan.sh" 2>&1) || exit_code=$?
+assert_eq        "secret-scan blocks PEM key (exit 2)"  "2"           "$exit_code"
+assert_contains  "secret-scan names PEM pattern"        "PEM private" "$output"
+cleanup "$dir"
+
+echo ""
+echo "-- pre-write-secret-scan-edit-tool-clean --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$PAYLOAD_DEPOT_DIR/payload-depot" install --no-codebase-index 2>&1) || true
+input='{"tool_name":"Edit","tool_input":{"file_path":"app.py","old_string":"foo","new_string":"bar"}}'
+exit_code=0
+echo "$input" | bash "$dir/.claude/hooks/pre-write-secret-scan.sh" 2>&1 || exit_code=$?
+assert_eq "secret-scan exits 0 on clean Edit content" "0" "$exit_code"
+cleanup "$dir"
+
+echo ""
+echo "-- post-bash-test-summary-pytest --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$PAYLOAD_DEPOT_DIR/payload-depot" install --no-codebase-index 2>&1) || true
+input='{"tool_name":"Bash","tool_input":{"command":"pytest tests/"},"tool_response":"3 passed in 0.12s"}'
+output=$(echo "$input" | bash "$dir/.claude/hooks/post-bash-test.sh" 2>&1)
+assert_contains "test-summary emits passed count" "3/3 passed" "$output"
+cleanup "$dir"
+
+echo ""
+echo "-- post-bash-test-summary-with-failures --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$PAYLOAD_DEPOT_DIR/payload-depot" install --no-codebase-index 2>&1) || true
+input='{"tool_name":"Bash","tool_input":{"command":"pytest tests/"},"tool_response":"2 failed, 3 passed in 0.45s"}'
+output=$(echo "$input" | bash "$dir/.claude/hooks/post-bash-test.sh" 2>&1)
+assert_contains "test-summary shows failures" "2 failed" "$output"
+cleanup "$dir"
+
+echo ""
+echo "-- post-bash-test-silent-on-non-test-command --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$PAYLOAD_DEPOT_DIR/payload-depot" install --no-codebase-index 2>&1) || true
+input='{"tool_name":"Bash","tool_input":{"command":"git status"},"tool_response":"On branch main"}'
+output=$(echo "$input" | bash "$dir/.claude/hooks/post-bash-test.sh" 2>&1)
+assert_eq "test-summary silent on non-test command" "" "$output"
+cleanup "$dir"
+
+echo ""
+echo "-- post-bash-test-bats-format --"
+dir=$(setup_fixture python-project)
+(cd "$dir" && "$PAYLOAD_DEPOT_DIR/payload-depot" install --no-codebase-index 2>&1) || true
+input='{"tool_name":"Bash","tool_input":{"command":"bats tests/test_install.sh"},"tool_response":"5 tests, 0 failures"}'
+output=$(echo "$input" | bash "$dir/.claude/hooks/post-bash-test.sh" 2>&1)
+assert_contains "test-summary parses bats format" "passed" "$output"
+cleanup "$dir"
+
 report

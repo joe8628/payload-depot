@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Claude Code target adapter
-# Sourced by `rig install` — do not execute directly.
+# Sourced by `payload-depot install` — do not execute directly.
 
 ADAPTER_NAME="claude-code"
 AGENT_INSTALL_PATH=".claude/agents"
@@ -20,6 +20,7 @@ adapter_validate() {
 adapter_pre_install() {
   mkdir -p ".claude/hooks"
   mkdir -p ".claude/commands"
+  mkdir -p ".claude/agents"
 }
 
 adapter_post_install() {
@@ -31,6 +32,15 @@ adapter_post_install() {
   chmod +x ".claude/hooks/payload-depot-health-check.sh"
   cp "$PAYLOAD_DEPOT_DIR/targets/claude-code/payload-depot-skill-check.sh"  ".claude/hooks/payload-depot-skill-check.sh"
   chmod +x ".claude/hooks/payload-depot-skill-check.sh"
+  cp "$PAYLOAD_DEPOT_DIR/targets/claude-code/payload-depot-agent-check.sh" ".claude/hooks/payload-depot-agent-check.sh"
+  chmod +x ".claude/hooks/payload-depot-agent-check.sh"
+  # Install quality hooks
+  cp "$PAYLOAD_DEPOT_DIR/targets/claude-code/post-edit-lint.sh"       ".claude/hooks/post-edit-lint.sh"
+  chmod +x ".claude/hooks/post-edit-lint.sh"
+  cp "$PAYLOAD_DEPOT_DIR/targets/claude-code/pre-write-secret-scan.sh" ".claude/hooks/pre-write-secret-scan.sh"
+  chmod +x ".claude/hooks/pre-write-secret-scan.sh"
+  cp "$PAYLOAD_DEPOT_DIR/targets/claude-code/post-bash-test.sh"        ".claude/hooks/post-bash-test.sh"
+  chmod +x ".claude/hooks/post-bash-test.sh"
   # Install slash commands
   cp "$PAYLOAD_DEPOT_DIR/targets/claude-code/commands/review.md"  ".claude/commands/review.md"
   cp "$PAYLOAD_DEPOT_DIR/targets/claude-code/commands/handoff.md" ".claude/commands/handoff.md"
