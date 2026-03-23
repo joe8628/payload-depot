@@ -525,3 +525,38 @@
 - Review `WARNINGS.md` — W-001 and W-002 remain open
 - Next milestone: v1.2 OpenSpec suite (F-008–F-016), start with F-008 (openspec-init) per FEATURES.md
 
+
+### Agent: Claude Sonnet 4.6
+**Completed:** 2026-03-23
+**Task:** Context window monitoring hook + /goal slash command
+
+#### Output Files
+- `targets/claude-code/context-monitor.sh` — new UserPromptSubmit hook; reads `transcript_path` from Claude Code stdin JSON; estimates tokens as `transcript_bytes / 4 + 20K system overhead`; warns to stderr at 70% (WARN), 85% (ALERT), 90%+ (CRITICAL); at CRITICAL also emits one line to stdout so Claude sees it; reads `.claude/session-goal.txt` and includes goal in warnings; configurable via `PAYLOAD_DEPOT_MAX_TOKENS` env var or `.claude/context.conf`; exits 0 always (never blocks)
+- `targets/claude-code/commands/goal.md` — new `/goal` slash command; set goal with `/goal <text>`, view with `/goal`; explains 4-tier strategy; `.claude/session-goal.txt` is gitignored
+- `targets/claude-code/settings.json.template` — context-monitor.sh added to UserPromptSubmit hooks array alongside session-start.sh
+- `targets/claude-code/adapter.sh` — adapter_post_install installs context-monitor.sh and commands/goal.md
+- `payload-depot` — `_ensure_gitignore_entries` adds `.claude/session-goal.txt` (fresh install block + upgrade path)
+- `.claude/hooks/context-monitor.sh`, `.claude/commands/goal.md`, `.claude/settings.json` — live copies synced
+- `tests/test_install.sh` — 13 new tests; 141 install + 17 skill check = 158 total, all passing
+
+#### Assumptions Made
+- Token estimation via `transcript_bytes / 4 + 20K overhead` is intentionally approximate; the overhead accounts for CLAUDE.md, repo map, and system prompt which are not in the transcript file but consume real context
+- 200K default covers all Claude Sonnet/Opus/Haiku models (as of 2026); override via env var for projects on older models or smaller limits
+- context-monitor fires on every UserPromptSubmit; warnings appear every prompt above threshold (no snooze mechanism); this is intentional — the signal should be persistent, not suppressible
+- `/goal` is a slash command (not a hook) because goal-setting is a deliberate user action, not an automatic one; the hook just reads the goal file when it exists
+- `.claude/session-goal.txt` is gitignored because goals are session-local context management, not project state worth committing
+
+#### What Was Not Done
+- No `context.conf` template installed — just env var override; could be added later for teams with shared token limits
+- Hook does not auto-compact — Claude Code's `/compact` is a UI command, not a shell command; no hook can invoke it programmatically
+
+#### Uncertainties
+- `transcript_path` availability: Claude Code injects it into UserPromptSubmit hook stdin; if a future Claude Code version changes this field name, the hook exits silently (already guarded)
+- Byte-to-token ratio varies: code is ~3 chars/token, prose is ~4-5 chars/token; using 4 as a middle estimate means code-heavy sessions may underestimate usage
+
+#### Instructions for Next Agent
+- Run `bash tests/test_install.sh && bash tests/test_skill_check.sh` before any changes (141 + 17 = 158 tests, all passing)
+- Context monitor is now live in `.claude/settings.json` — it fires on every prompt in this session
+- Next milestone: v1.2 OpenSpec suite (F-008–F-016), start with F-008 (openspec-init) per FEATURES.md
+- Review `WARNINGS.md` — W-001 and W-002 remain open
+
