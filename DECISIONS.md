@@ -136,3 +136,17 @@
 - **Rationale:** Allows incremental adoption: write the skill file first, verify it structurally, then register it. Only missing registered skills (registered but file absent) are hard failures.
 - **Affected files:** `targets/claude-code/payload-depot-skill-check.sh`, `tests/test_skill_check.sh`
 - **Date:** 2026-03-19
+
+### Agent files use tool-scoped frontmatter to enforce role contracts
+- **Decision:** Read-only agents (architect, code-reviewer, debugger, security-auditor) declare only `Read, Glob, Grep, Bash` in their `tools:` frontmatter — explicitly excluding `Write` and `Edit`.
+- **Alternatives considered:** Give all agents full tool access and rely on prompt instructions alone — simpler, but nothing prevents an agent from writing when it shouldn't.
+- **Rationale:** Claude Code enforces the `tools:` list at the system level. A code-reviewer that cannot call `Write` or `Edit` cannot accidentally implement fixes, even if instructed to. The constraint is structural, not just instructional.
+- **Affected files:** `.claude/agents/architect.md`, `.claude/agents/code-reviewer.md`, `.claude/agents/debugger.md`, `.claude/agents/security-auditor.md`
+- **Date:** 2026-03-22
+
+### Model tiers assigned by agent cognitive load
+- **Decision:** opus for architect/debugger/security-auditor, sonnet for code-writer/code-reviewer/planner/test-writer/refactor/release-manager, haiku for docs-writer/issue-logger.
+- **Alternatives considered:** Sonnet for everything — simpler, slightly higher cost for utility agents.
+- **Rationale:** Agents that require multi-step reasoning over ambiguous evidence (architecture design, root cause analysis, security threat modelling) benefit from opus. Agents with well-structured, mechanical tasks (doc generation, issue logging) don't need it and run faster and cheaper on haiku.
+- **Affected files:** All `.claude/agents/*.md`
+- **Date:** 2026-03-22

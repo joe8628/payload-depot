@@ -383,3 +383,43 @@
 - Run `bash tests/test_install.sh && bash tests/test_skill_check.sh` before any changes (90 + 17 = 107 tests)
 - No "Loadout Depot" or "loadout-depot" remain in any active doc files
 - Next milestone: v1.2 OpenSpec suite (F-008–F-016), start with F-008 (openspec-init) per FEATURES.md
+
+---
+
+### Agent: Claude Sonnet 4.6
+**Completed:** 2026-03-22
+**Task:** Migrate .claude/agents/ to Claude Code subagent format + add release-manager and refactor agents
+
+#### Output Files
+- `.claude/agents/architect.md` — frontmatter replaced: version/updated/changelog → name/description/tools/model (opus, Read Glob Grep Bash)
+- `.claude/agents/planner.md` — frontmatter replaced (sonnet, Read Write Bash)
+- `.claude/agents/code-writer.md` — frontmatter replaced (sonnet, Read Write Edit Glob Grep Bash)
+- `.claude/agents/code-reviewer.md` — frontmatter replaced (sonnet, Read Glob Grep Bash — read-only)
+- `.claude/agents/debugger.md` — frontmatter replaced (opus, Read Glob Grep Bash — read-only)
+- `.claude/agents/test-writer.md` — frontmatter replaced (sonnet, Read Write Edit Glob Grep Bash)
+- `.claude/agents/security-auditor.md` — frontmatter replaced (opus, Read Glob Grep Bash — read-only)
+- `.claude/agents/docs-writer.md` — frontmatter replaced (haiku, Read Write Edit Glob Grep Bash)
+- `.claude/agents/issue-logger.md` — frontmatter replaced (haiku, Read Write Glob Bash)
+- `.claude/agents/release-manager.md` — new agent: orchestrates full release ritual (changelog, version bump, tag, PR to main)
+- `.claude/agents/refactor.md` — new agent: structural cleanup without behaviour change; requires green test baseline before starting
+- `AGENTS.md` — added release-manager and refactor entries; fixed stale `rig install` → `payload-depot install` in line 3 comment
+
+#### Assumptions Made
+- Model assignments: opus for design/diagnostic agents (architect, debugger, security-auditor) where depth matters; haiku for utility agents (docs-writer, issue-logger) where cost matters; sonnet for everything else
+- Read-only agents (code-reviewer, debugger, security-auditor, architect) intentionally exclude Write/Edit from their tool list to enforce their no-implementation contracts at the tool level
+- `release-manager` is given Write/Edit/Bash because it must update CHANGELOG.md and version files — not just read
+- `refactor` treats a green test baseline as a hard prerequisite; if tests are failing on entry it stops and reports rather than attempting to refactor broken code
+
+#### What Was Not Done
+- The two new agents (`release-manager`, `refactor`) are not yet wired into the install adapter (`targets/claude-code/adapter.sh`) — the `.claude/agents/` directory is not currently part of what `payload-depot install` deploys to target projects. This is a gap: target projects won't get these agents unless install is updated.
+- No tests added for agent file format validation (presence of required frontmatter fields) — the test suite covers skills and install steps but not `.claude/agents/` structure
+
+#### Uncertainties
+- Claude Code's `.claude/agents/` subagent system is relatively new. The `description` field content determines when Claude auto-delegates — the descriptions written here are functional but may need tuning based on real usage patterns
+- `release-manager` uses `gh pr create` — this assumes the `gh` CLI is authenticated in the target environment. No fallback documented if `gh` is unavailable.
+
+#### Instructions for Next Agent
+- Run `bash tests/test_install.sh && bash tests/test_skill_check.sh` before any changes (90 + 17 = 107 tests, all passing)
+- **Gap to address:** `targets/claude-code/adapter.sh` does not copy `.claude/agents/` to target projects on install. Decide whether agents should be installed alongside skills, and if so update `adapter_pre_install` to create `.claude/agents/` and `adapter_post_install` to copy agent files. Add install tests to cover it.
+- **Gap to address:** Consider adding a `payload-depot-agent-check.sh` validator (parallel to `payload-depot-skill-check.sh`) that verifies all agent files have the required frontmatter fields (name, description, tools, model)
+- Next milestone remains: v1.2 OpenSpec suite (F-008–F-016), start with F-008 (openspec-init) per FEATURES.md
